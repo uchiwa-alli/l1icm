@@ -93,6 +93,7 @@ a.tile{text-decoration:none;color:inherit}
 [hidden]{display:none!important}
 a.dl{text-decoration:none;display:inline-block}
 .dls{display:flex;flex-wrap:wrap;gap:10px}
+a.qgo{display:inline-block;text-decoration:none}
 .dl.alt{background:var(--surface);color:var(--ink);border:1px solid var(--line)}
 .dl.alt:hover{background:var(--blue);color:#fff;border-color:var(--blue)}
 .hero{display:flex;width:100%;gap:14px;align-items:center;text-align:left;border:0;border-radius:22px;padding:20px;margin-bottom:16px;color:#fff;background:linear-gradient(120deg,#2b7be0,#4b3fd1 60%,#161848);background-size:200% 200%;animation:sheen 6s ease-in-out infinite;position:relative;overflow:hidden}
@@ -183,6 +184,7 @@ a.dl{text-decoration:none;display:inline-block}
 <div class="lessons" id="lessons"></div></section>
 
 <section class="view" id="v-cls"><h2>La classe</h2><p class="sub">Retrouve un camarade par son nom. <b id="cnt"></b></p>
+<div class="card" id="formbox" hidden><b style="display:block">Ta fiche n’est pas à jour ?</b><span class="sub" style="display:block;margin:4px 0 0">Envoie ton nom exact, ton lien Facebook et, si tu veux, ta photo. Ta fiche apparaît après validation par l’admin (quelques minutes).</span><a class="qgo" id="formbtn" target="_blank" rel="noopener" style="margin-top:12px">✏️ Ajouter ou modifier ma fiche</a></div>
 <input id="q" type="search" placeholder="Rechercher un nom" aria-label="Rechercher un nom"><div class="people" id="people"></div></section>
 
 <section class="view" id="v-me"><h2>Admin</h2><p class="sub">Qui gère ce site.</p>
@@ -236,7 +238,15 @@ var DEF = {
     "ANDRIAHITHARSON Theoddy Ephrem": { photo: "photos/theoddy-ephrem.jpg", facebook: "https://www.facebook.com/profile.php?id=61594108423989" }
   },
 
-  /* 6) EMPLOI DU TEMPS (semaine type)
+  /* 6) FICHES ENVOYÉES PAR LES ÉLÈVES (formulaire Google, validées par toi)
+        formulaire : lien du formulaire (bouton « Ajouter ou modifier ma fiche »)
+        csv : lien publié de la feuille « Site » (seules les lignes OUI y figurent) */
+  fiches: {
+    formulaire: "https://forms.gle/g7jhEg6KmKuVRCtr7",
+    csv: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ7dx8YJFTpscxuHKqN4y_DyEvam8o04NPjJohOXPvbmyN3IVmDc8RrHrs7QiebwgQEpRQvGomTFf5J/pub?gid=1209079916&single=true&output=csv"
+  },
+
+  /* 7) EMPLOI DU TEMPS (semaine type)
         [jour, heure début, heure fin, "Matière", "Enseignant", "Salle (optionnel)"]
         jour : 1=Lundi 2=Mardi 3=Mercredi 4=Jeudi 5=Vendredi 6=Samedi 0=Dimanche
         Exemple avec salle différente : [3, 9, 11, "IOB", "Mme Hoby", "B 12"] */
@@ -303,10 +313,11 @@ function av(n){var h=hs(n),pk=function(a,k){return a[(h>>>k)%a.length]},
  eye=function(x){return '<ellipse cx="'+x+'" cy="55" rx="6.8" ry="8.4" fill="#fff"/><ellipse cx="'+x+'" cy="56" rx="5" ry="6.8" fill="'+ey+'"/><ellipse cx="'+x+'" cy="56.5" rx="2.5" ry="3.8" fill="#1a1a2e"/><circle cx="'+(x+2)+'" cy="52.5" r="2" fill="#fff"/><circle cx="'+(x-1.5)+'" cy="59" r="1" fill="#fff"/><path d="M'+(x-8)+' 48 Q'+x+' 44 '+(x+8)+' 48" stroke="#1a1a2e" stroke-width="2" fill="none" stroke-linecap="round"/>'};
  return '<svg viewBox="0 0 100 100" aria-hidden="true"><rect width="100" height="100" fill="'+bg+'"/>'+back+'<path d="M14 100 Q16 82 50 80 Q84 82 86 100Z" fill="'+sh+'"/><rect x="44" y="70" width="12" height="14" fill="'+sk+'"/><ellipse cx="50" cy="52" rx="25" ry="28" fill="'+sk+'"/>'+top+'<path d="M23 52 Q20 14 50 14 Q80 14 77 52 Q72 34 60 36 Q50 44 40 36 Q28 34 23 52Z" fill="'+hr+'"/>'+eye(38)+eye(62)+'<ellipse cx="30" cy="67" rx="5" ry="3" fill="#ff8fa3" opacity=".55"/><ellipse cx="70" cy="67" rx="5" ry="3" fill="#ff8fa3" opacity=".55"/><path d="M45 72 Q50 77 55 72" stroke="#7a3b3b" stroke-width="2" fill="none" stroke-linecap="round"/></svg>'}
 var FB="https://www.facebook.com/profile.php?id=61593380452057";
-function card(n){var me=n===ME,pr=(I.profils||{})[n]||{},ok=function(u){return typeof u==="string"&&/^https?:\/\//.test(u)},
+var FICHES={};
+function card(n){var me=n===ME,pr=Object.assign({},(I.profils||{})[n],FICHES[n]),ok=function(u){return typeof u==="string"&&/^https?:\/\//.test(u)},
  pic=me?AD:pr.photo,link=me?FB:(ok(pr.facebook)?pr.facebook:"");
- return '<div class="card person"><div class="av">'+(pic?'<img alt="Photo de '+esc(n)+'" src="'+esc(pic)+'" loading="lazy">':av(n))+'</div>'+esc(n)+(me?'<br><span class="chip">Admin</span>':'')+(link?'<br><a class="fb" href="'+esc(link)+'" target="_blank" rel="noopener">Accéder à '+(me?'mon':'son')+' profil Facebook</a>':'')+'</div>'}
-function pp(f){var L=P.filter(function(n){return nz(n).indexOf(nz(f))>-1});$("cnt").textContent=L.length+" étudiant"+(L.length>1?"s":"");$("people").innerHTML=L.map(card).join("")||'<p class="sub">Aucun résultat.</p>'}
+ return '<div class="card person"><div class="av">'+(pic?'<img alt="Photo de '+esc(n)+'" data-n="'+esc(n)+'" src="'+esc(pic)+'" loading="lazy">':av(n))+'</div>'+esc(n)+(me?'<br><span class="chip">Admin</span>':'')+(link?'<br><a class="fb" href="'+esc(link)+'" target="_blank" rel="noopener">Accéder à '+(me?'mon':'son')+' profil Facebook</a>':'')+'</div>'}
+function pp(f){var L=P.filter(function(n){return nz(n).indexOf(nz(f))>-1});$("cnt").textContent=L.length+" étudiant"+(L.length>1?"s":"");$("people").innerHTML=L.map(card).join("")||'<p class="sub">Aucun résultat.</p>';document.querySelectorAll("#people .av img").forEach(function(im){im.onerror=function(){im.parentNode.innerHTML=av(im.getAttribute("data-n"))}})}
 pp("");$("q").oninput=function(){pp(this.value)};
 function route(){var v=location.hash.slice(1);go(title[v]?v:"home")}
 window.addEventListener("hashchange",route);route();
@@ -368,6 +379,19 @@ function qEnd(){var n=qlist.length,s=sget(),dn=dayNum();
  $("qre").onclick=qStart;$("qco").onclick=function(){location.hash="les"};
  $("qsh").onclick=function(){var t="J’ai eu "+qs+"/"+n+" au quiz du jour de L1 ICM · EMIT 🧠 Et toi ? "+location.href.split("#")[0];
   if(navigator.share){navigator.share({text:t}).catch(function(){})}else if(navigator.clipboard){navigator.clipboard.writeText(t).then(function(){$("qsh").textContent="Copié ✓"},function(){})}}}
+
+function csvParse(t){var r=[],row=[],f="",q=false,i,c;for(i=0;i<t.length;i++){c=t[i];if(q){if(c==='"'){if(t[i+1]==='"'){f+='"';i++}else q=false}else f+=c}else if(c==='"')q=true;else if(c===","){row.push(f);f=""}else if(c==="\n"||c==="\r"){if(c==="\r"&&t[i+1]==="\n")i++;row.push(f);r.push(row);row=[];f=""}else f+=c}if(f!==""||row.length){row.push(f);r.push(row)}return r}
+function okFb(u){try{var x=new URL(u),h=x.hostname.toLowerCase();return x.protocol==="https:"&&(h==="facebook.com"||/\.facebook\.com$/.test(h)||h==="fb.com"||/\.fb\.com$/.test(h)||h==="fb.me")}catch(e){return false}}
+function okPh(u){return /^https:\/\//i.test(u)||/^photos\/[\w.\-]+$/i.test(u)}
+function nkey(t){return nz(String(t||"")).replace(/\s+/g," ").trim()}
+function loadFiches(){var F=I.fiches;if(!F||!window.fetch)return;
+ if(F.formulaire&&/^https:\/\//.test(F.formulaire)){$("formbtn").href=F.formulaire;$("formbox").hidden=false}
+ if(!F.csv)return;
+ fetch(F.csv,{cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.text()}).then(function(t){
+  var idx={},m={};P.forEach(function(n){idx[nkey(n)]=n});
+  csvParse(t).slice(1).forEach(function(r){var n=idx[nkey(r[0])];if(!n||n===ME)return;var fb=(r[1]||"").trim(),ph=(r[2]||"").trim(),o={};if(okFb(fb))o.facebook=fb;if(okPh(ph))o.photo=ph;if(o.facebook||o.photo)m[n]=Object.assign(m[n]||{},o)});
+  FICHES=m;pp($("q").value)}).catch(function(){})}
+loadFiches();
 qHero();route();
 </script>
 </body>

@@ -42,7 +42,15 @@ var INFOS = {
     "ANDRIAHITHARSON Theoddy Ephrem": { photo: "photos/theoddy-ephrem.jpg", facebook: "https://www.facebook.com/profile.php?id=61594108423989" }
   },
 
-  /* 6) EMPLOI DU TEMPS (semaine type)
+  /* 6) FICHES ENVOYÉES PAR LES ÉLÈVES (formulaire Google, validées par toi)
+        formulaire : lien du formulaire (bouton « Ajouter ou modifier ma fiche »)
+        csv : lien publié de la feuille « Site » (seules les lignes OUI y figurent) */
+  fiches: {
+    formulaire: "https://forms.gle/g7jhEg6KmKuVRCtr7",
+    csv: "https://docs.google.com/spreadsheets/d/e/2PACX-1vQ7dx8YJFTpscxuHKqN4y_DyEvam8o04NPjJohOXPvbmyN3IVmDc8RrHrs7QiebwgQEpRQvGomTFf5J/pub?gid=1209079916&single=true&output=csv"
+  },
+
+  /* 7) EMPLOI DU TEMPS (semaine type)
         [jour, heure début, heure fin, "Matière", "Enseignant", "Salle (optionnel)"]
         jour : 1=Lundi 2=Mardi 3=Mercredi 4=Jeudi 5=Vendredi 6=Samedi 0=Dimanche
         Exemple avec salle différente : [3, 9, 11, "IOB", "Mme Hoby", "B 12"] */
