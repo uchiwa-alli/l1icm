@@ -34,7 +34,15 @@ var INFOS = {
     { matiere: "IM", prof: "Mme Sylvie", titre: "Chapitre 6 · La vidéo", fichier: "cours/IM-chapitre-6-video.pdf" }
   ],
 
-  /* 5) EMPLOI DU TEMPS (semaine type)
+  /* 5) PROFILS DES CAMARADES (photo + lien Facebook, facultatifs)
+        Le nom doit être écrit EXACTEMENT comme dans la liste de la classe.
+        photo : chemin d'une image carrée dans le dossier "photos"
+        facebook : lien complet du profil (commençant par https://) */
+  profils: {
+    "ANDRIAHITHARSON Theoddy Ephrem": { photo: "photos/theoddy-ephrem.jpg", facebook: "https://www.facebook.com/profile.php?id=61594108423989" }
+  },
+
+  /* 6) EMPLOI DU TEMPS (semaine type)
         [jour, heure début, heure fin, "Matière", "Enseignant", "Salle (optionnel)"]
         jour : 1=Lundi 2=Mardi 3=Mercredi 4=Jeudi 5=Vendredi 6=Samedi 0=Dimanche
         Exemple avec salle différente : [3, 9, 11, "IOB", "Mme Hoby", "B 12"] */
