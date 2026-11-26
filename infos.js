@@ -17,8 +17,10 @@ var INFOS = {
   /* 3) ANNONCES (la plus récente en premier)
         jour : "AAAA-MM-JJ" → affiche un compte à rebours (optionnel, sinon mets "") */
   annonces: [
-    { date: "4 déc. 2026",  jour: "2026-12-04", titre: "GSE avec Dr Jacques Aimé", texte: "Cours de 7h à 9h, le vendredi 4 décembre." },
-    { date: "24 nov. 2026", jour: "",           titre: "Nouvel emploi du temps",   texte: "Tous les cours ont lieu en salle B 101." }
+    { date: "26 nov. 2026", jour: "",           titre: "🟢 NB · Français des affaires", texte: "🟢NB: REHEFA MANAO FRANÇAIS DES AFFAIRES @ Dr FARA ZAY VAO MIZARA GROUPE ✅" },
+    { date: "26 nov. 2026", jour: "",           titre: "Nouvelle liste de la classe", texte: "La liste affiche maintenant les numéros et les groupes. Groupe 1 : n° 1 à 173. Groupe 2 : n° 174 à 345. Va dans « La classe » pour trouver ton numéro." },
+    { date: "26 nov. 2026", jour: "",           titre: "Emploi du temps mis à jour", texte: "Français des affaires en 2 groupes (Gp 1 : 8h-10h, Gp 2 : 10h-12h). IM le jeudi et GSE le vendredi passent à 8h-10h. Tous les cours ont lieu en salle B 101." },
+    { date: "4 déc. 2026",  jour: "2026-12-04", titre: "GSE avec Dr Jacques Aimé", texte: "Cours de 8h à 10h, le vendredi 4 décembre." }
   ],
 
   /* 4) LEÇONS PDF (page « Leçons PDF »)
@@ -55,13 +57,14 @@ var INFOS = {
         jour : 1=Lundi 2=Mardi 3=Mercredi 4=Jeudi 5=Vendredi 6=Samedi 0=Dimanche
         Exemple avec salle différente : [3, 9, 11, "IOB", "Mme Hoby", "B 12"] */
   edt: [
-    [1, 9, 12, "Français des affaires", "Dr Fara"],
+    [1, 8, 10, "Français des affaires", "Dr Fara · Gp 1"],
+    [1, 10, 12, "Français des affaires", "Dr Fara · Gp 2"],
     [1, 14, 16, "IOB", "Mme Hoby"],
     [2, 10, 12, "MAC OS", "Mme Sylvie"],
     [3, 9, 11, "IOB", "Mme Hoby"],
-    [4, 7, 9, "IM", "Mme Sylvie"],
+    [4, 8, 10, "IM", "Mme Sylvie"],
     [4, 14, 17, "METU", "Pr Henri"],
-    [5, 7, 9, "GSE", "Dr Jacques Aimé"],
+    [5, 8, 10, "GSE", "Dr Jacques Aimé"],
     [5, 16, 18, "Anglais", "Mr Toky"]
   ]
 };
