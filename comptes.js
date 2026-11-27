@@ -82,6 +82,12 @@ css.textContent = "\
 .pfed{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.pfed .av{width:76px;height:76px;margin:0;flex:none;font-size:26px}\
 .pfed .bt{display:flex;gap:8px;flex-wrap:wrap}.pfed .bt button,.pfed .bt label{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:9px 14px;font-weight:700;font-size:13px;cursor:pointer}\
 .pfcnt{margin:-6px 2px 0;text-align:right;font-size:12px;color:var(--muted)}\
+#cfban{display:flex;align-items:center;gap:14px;width:100%;text-align:left;margin:0 0 14px;padding:16px;border:0;border-radius:20px;background:linear-gradient(135deg,var(--navy),var(--blue));color:var(--on-navy);transition:transform .15s}#cfban[hidden]{display:none}#cfban:active{transform:scale(.98)}\
+#cfban i{font-style:normal;font-size:28px;width:52px;height:52px;display:grid;place-items:center;border-radius:16px;background:rgba(255,255,255,.18);flex:none}\
+#cfban span{display:grid;gap:2px;min-width:0}#cfban b{font-size:19px;line-height:1.2}#cfban small{font-size:14px;opacity:.92;line-height:1.3}\
+#cfban em{margin-left:auto;flex:none;font-style:normal;font-weight:800;font-size:12px;background:#ffd23f;color:#2b2200;border-radius:99px;padding:5px 11px}\
+#cfban em::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:#e5484d;margin-right:6px;animation:cfp 1.4s ease-in-out infinite}\
+@keyframes cfp{50%{opacity:.25}}@media(prefers-reduced-motion:reduce){#cfban em::before{animation:none}}\
 .cfc{margin-bottom:10px}.cft{margin:0 0 8px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45;font-size:16px}\
 .cfa{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.cfa button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:7px 13px;font-weight:700;font-size:13px}.cfa button.on{background:var(--navy);color:var(--on-navy);border-color:var(--navy)}.cfa button.dg{border-color:#e5484d;color:#e5484d}.cfa button:disabled{opacity:.6}\
 .cfk{margin-top:12px;border-top:1px solid var(--line);padding-top:10px;display:grid;gap:8px}.cfq{font-size:14px;line-height:1.35;overflow-wrap:anywhere}.cfx{border:0;background:none;font-size:13px}\
@@ -103,8 +109,13 @@ function mkTile(id, ico, b, s) {
   $("tiles").appendChild(el);
   return el;
 }
-var tAcc = mkTile("t-acc", "👤"), tConf = mkTile("t-conf", "💌"), tAdm = mkTile("t-adm", "🛡️");
-tAdm.hidden = true; tConf.hidden = true;
+var tAcc = mkTile("t-acc", "👤"), tAdm = mkTile("t-adm", "🛡️");
+tAdm.hidden = true;
+var tConf = document.createElement("button");   /* bannière « Confessions » tout en haut de l'accueil */
+tConf.id = "cfban"; tConf.hidden = true; tConf.innerHTML = "<i>💌</i><span><b>Confessions</b><small></small></span><em>Nouveau</em>";
+tConf.onclick = function () { location.hash = "conf"; };
+$("qhero").parentNode.insertBefore(tConf, $("qhero"));
+function seenCf() { try { return !!localStorage.getItem("l1icm_cf_vu"); } catch (e) { return false; } }
 
 function mkSec(id) { var s = document.createElement("section"); s.className = "view"; s.id = id; $("app").appendChild(s); return s; }
 mkSec("v-compte"); mkSec("v-admin"); mkSec("v-conf");
@@ -118,7 +129,7 @@ window.go = function (v) {
   if (v === "admin" && !isAdmin) { if (ST === "load") { _go("compte"); return; } location.hash = "compte"; return; }
   _go(v);
   if (v === "cls") loadProfils();
-  if (v === "conf") viewConf();
+  if (v === "conf") { try { localStorage.setItem("l1icm_cf_vu", "1"); } catch (e) {} tConf.querySelector("em").hidden = true; viewConf(); }
   if (v === "compte") viewCompte();
   if (v === "admin") loadAdmin();
 };
@@ -291,7 +302,7 @@ function render() {
   tAcc.querySelector("b").textContent = ok ? "Mon compte" : "Compte";
   tAcc.querySelector("span").textContent = ok ? (isAdmin ? "Connecté en admin" : "N° " + prof.num + " · Groupe " + (prof.num <= G1 ? 1 : 2)) : "Connexion · Inscription";
   tAdm.hidden = !(ok && isAdmin);
-  tConf.hidden = !ok; tConf.querySelector("b").textContent = "Confessions"; tConf.querySelector("span").textContent = isAdmin ? "Valider et modérer" : "Anonyme · validé par l’admin";
+  tConf.hidden = !ok; tConf.querySelector("small").textContent = isAdmin ? "Valider et modérer les messages" : "Anonyme pour la classe · écris, aime, commente"; tConf.querySelector("em").hidden = seenCf();
   tAdm.querySelector("b").textContent = "Espace admin";
   tAdm.querySelector("span").textContent = "Statistiques et comptes";
 
@@ -495,7 +506,7 @@ function cfPost(id) { return CF.posts.filter(function (x) { return x.id === id; 
 function viewConf() {
   var b = $("v-conf"); if (MUST && !allowed()) { b.innerHTML = ""; return; }
   b.innerHTML = '<div class="rt"><h2 style="margin:8px 0 6px">💌 Confessions</h2><button id="cfr">↻ Actualiser</button></div>' +
-    '<p class="sub">Anonyme pour la classe : l’admin voit l’auteur et valide chaque message avant sa publication.</p>' +
+    '<p class="sub">Anonyme pour la classe. Les messages sont publiés après validation.</p>' +
     (isAdmin ? "" : '<div class="card"><form class="fm" id="cff"><label>Ton message<textarea name="t" rows="3" maxlength="400" placeholder="Une déclaration, une anecdote, un mot pour quelqu’un… Reste respectueux."></textarea></label><button class="qgo" type="submit">Envoyer pour validation</button><p class="msg"></p></form></div>') +
     '<div id="cfm"></div><div id="cfl"><p class="sub">Chargement…</p></div>';
   $("cfr").onclick = function () { CF.com = {}; loadConf(); };
@@ -582,7 +593,7 @@ $("v-conf").addEventListener("submit", function (e) {
     if (CF.mine.filter(function (d) { return d.statut === "attente"; }).length >= 3) { m.className = "msg ko"; m.textContent = "Tu as déjà 3 messages en attente. Patiente un peu."; return; }
     var ref = db.collection("confAuteurs").doc(); btn.disabled = true; m.className = "msg"; m.textContent = "Envoi…";
     ref.set({ kind: "post", postId: ref.id, num: +prof.id, nom: prof.nom, texte: t, statut: "attente", creeLe: F.serverTimestamp() })
-      .then(function () { f.reset(); btn.disabled = false; loadConf().then(function () { var z = $("cff"); if (z) { var q = z.querySelector(".msg"); q.className = "msg ok"; q.textContent = "Envoyé ✅ L’admin va le valider avant publication."; } }); })
+      .then(function () { f.reset(); btn.disabled = false; loadConf().then(function () { var z = $("cff"); if (z) { var q = z.querySelector(".msg"); q.className = "msg ok"; q.textContent = "Envoyé ✅ Il sera publié après validation."; } }); })
       .catch(function (er) { m.className = "msg ko"; m.textContent = fr(er); btn.disabled = false; });
   } else if (f.classList.contains("cfcf")) {
     var id = f.dataset.id, cr = db.collection("confessions/" + id + "/commentaires").doc(), bt = db.batch(), ts = F.serverTimestamp(); btn.disabled = true;
