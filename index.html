@@ -366,9 +366,10 @@ function av(n){var h=hs(n),pk=function(a,k){return a[(h>>>k)%a.length]},
 var FB="https://www.facebook.com/profile.php?id=61593380452057";
 var FICHES={};
 function nm(n){var t=n.split(" "),i=0;while(i<t.length&&t[i]===t[i].toUpperCase()&&/[A-ZÀ-Ý]/.test(t[i]))i++;if(i===0)i=1;return[t.slice(0,i).join(" "),t.slice(i).join(" ")]}
-function row(r){var n=r.n,me=n===ME,pr=Object.assign({},(I.profils||{})[n],FICHES[n]),ok=function(u){return typeof u==="string"&&/^https?:\/\//.test(u)},
+function getPr(n){return Object.assign({},(I.profils||{})[n],FICHES[n],(window.PROFILS||{})[n])}
+function row(r){var n=r.n,me=n===ME,pr=getPr(n),ok=function(u){return typeof u==="string"&&/^https?:\/\//.test(u)},
  pic=me?AD:pr.photo,link=me?FB:(ok(pr.facebook)?pr.facebook:""),p=nm(n),multi=r.nums.length>1;
- return '<div class="row'+(me?' me':'')+'"><div class="nb g'+r.g+'"><b'+(multi?' class="m"':'')+'>'+r.nums.join(" · ")+'</b><small>GROUPE '+r.g+'</small></div><div class="av">'+(pic?'<img alt="Photo de '+esc(n)+'" data-n="'+esc(n)+'" src="'+esc(pic)+'" loading="lazy">':av(n))+'</div><div class="tx"><b>'+esc(p[0])+'</b> '+esc(p[1])+(me?' <span class="chip">Admin</span>':'')+(link?'<br><a class="fb" href="'+esc(link)+'" target="_blank" rel="noopener">Accéder à '+(me?'mon':'son')+' profil Facebook</a>':'')+'</div></div>'}
+ return '<div class="row'+(me?' me':'')+'" data-n="'+esc(n)+'" tabindex="0" role="button" aria-label="Voir le profil de '+esc(n)+'"><div class="nb g'+r.g+'"><b'+(multi?' class="m"':'')+'>'+r.nums.join(" · ")+'</b><small>GROUPE '+r.g+'</small></div><div class="av">'+(pic?'<img alt="Photo de '+esc(n)+'" data-n="'+esc(n)+'" src="'+esc(pic)+'" loading="lazy">':av(n))+'</div><div class="tx"><b>'+esc(p[0])+'</b> '+esc(p[1])+(me?' <span class="chip">Admin</span>':'')+(link?'<br><a class="fb" href="'+esc(link)+'" target="_blank" rel="noopener">Accéder à '+(me?'mon':'son')+' profil Facebook</a>':'')+'</div></div>'}
 var G=0,PAGE=60,shown=PAGE;
 function filt(){var f=$("q").value.trim(),num=/^\d+$/.test(f)?+f:null,k=nkey(f);
  return ROWS.filter(function(r){if(G&&r.g!==G)return false;if(!f)return true;return num!==null?r.nums.indexOf(num)>-1:nkey(r.n).indexOf(k)>-1})}

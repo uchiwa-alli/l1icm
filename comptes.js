@@ -1,7 +1,8 @@
 /* ============================================================
    COMPTES · L1 ICM · EMIT Fianarantsoa
    Inscription (élèves de la classe uniquement), connexion,
-   statistiques de visite et espace admin.
+   statistiques de visite, espace admin et profils publics
+   (photo, lien Facebook, bio, statut).
    Tu n'as rien à modifier ici : tout se règle dans firebase-config.js
    © 2026 Alli · ALLI.DEV. Tous droits réservés.
    ============================================================ */
@@ -69,6 +70,18 @@ css.textContent = "\
 .ab{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}.ab button{border:1.5px solid var(--line);background:var(--surface);color:var(--ink);border-radius:14px;padding:12px 8px;font-weight:700}\
 .ab button.dg{border-color:#e5484d;color:#e5484d}.ab button.pr{background:var(--navy);color:var(--on-navy);border-color:var(--navy)}.ab button:disabled{opacity:.5}\
 .rt{display:flex;justify-content:space-between;align-items:center;gap:10px;flex-wrap:wrap}.rt button{border:1px solid var(--line);background:var(--surface);border-radius:99px;padding:8px 14px;font-weight:700;font-size:13px}\
+#people .row{cursor:pointer}#people .row:active{opacity:.85}#people .row:focus-visible{outline:2px solid var(--blue)}\
+.pc .av img,.pfav img,.pfav svg,.pfed .av img,.pfed .av svg{width:100%;height:100%;object-fit:cover;display:block}\
+.pfv{text-align:center}.pfv h3{margin:0;font-size:20px;line-height:1.25;overflow-wrap:anywhere}\
+.pfav{width:104px;height:104px;margin:4px auto 12px;font-size:34px}\
+.pfm{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap;margin-top:10px}.pfm .chip{margin:0}\
+.pfrel{border-radius:99px;padding:5px 14px;font-weight:700;font-size:14px;background:var(--surface);border:1px solid var(--line)}\
+.pfbio{margin:14px 0 0;text-align:left;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45;font-size:15px;background:var(--surface);border:1px solid var(--line);border-radius:14px;padding:12px 14px}\
+.pfbio.vide{color:var(--muted);text-align:center}\
+.pffb{display:block;margin-top:12px;text-align:center;text-decoration:none;border-radius:14px;padding:13px 10px;font-weight:800;background:var(--navy);color:var(--on-navy)}\
+.pfed{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.pfed .av{width:76px;height:76px;margin:0;flex:none;font-size:26px}\
+.pfed .bt{display:flex;gap:8px;flex-wrap:wrap}.pfed .bt button,.pfed .bt label{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:9px 14px;font-weight:700;font-size:13px;cursor:pointer}\
+.pfcnt{margin:-6px 2px 0;text-align:right;font-size:12px;color:var(--muted)}\
 ";
 document.head.appendChild(css);
 
@@ -100,6 +113,7 @@ window.go = function (v) {
   if (MUST && !allowed()) return;                /* aucune page interne sans compte actif, même en tapant l'URL (#admin, #quiz…) */
   if (v === "admin" && !isAdmin) { if (ST === "load") { _go("compte"); return; } location.hash = "compte"; return; }
   _go(v);
+  if (v === "cls") loadProfils();
   if (v === "compte") viewCompte();
   if (v === "admin") loadAdmin();
 };
@@ -145,7 +159,8 @@ function nbU(u) { var g = u.num <= G1 ? 1 : 2; return '<div class="nb g' + g + '
 function allowed() { return ST === "in" && (isAdmin || (!!prof && eff(prof) === "actif")); }
 function stopWatch() { if (unsub) { try { unsub(); } catch (e) {} unsub = null; } }
 function wipe() {                                /* efface tout ce qui est privé quand la session se termine */
-  AD = {}; welcome = false;
+  AD = {}; welcome = false; pfDirty = false; pfPhoto = ""; pubAt = 0; pubSt = 0;
+  Object.keys(PUB).forEach(function (k) { delete PUB[k]; }); if (typeof pp === "function") pp();
   $("v-admin").innerHTML = ""; $("v-compte").innerHTML = "";
   _go("home");
   try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
@@ -294,7 +309,7 @@ function render() {
     blk.innerHTML = '<div class="gi2"><div class="card" style="text-align:center"><div style="font-size:56px">' + t[0] + "</div><h2>" + t[1] + '</h2><p class="sub" style="margin:0 auto 6px">' + t[2] + '</p><button class="qgo" id="blko">Se déconnecter</button></div></div>';
     $("blko").onclick = function () { auth.signOut(); };
   }
-  if (ok && !wasOk) { wasOk = true; first(); route(); }
+  if (ok && !wasOk) { wasOk = true; first(); loadProfils(true); route(); }
   wasOk = ok;
   if ($("v-compte").classList.contains("on")) viewCompte();
 }
@@ -310,12 +325,14 @@ function viewCompte() {
     $("go-adm").onclick = function () { location.hash = "admin"; }; $("lo").onclick = function () { auth.signOut(); };
     return;
   }
+  if ($("pfbox") && pfDirty) return;             /* ne pas écraser ce que l'élève est en train de saisir */
   var p = nm(prof.nom), s = eff(prof);
   b.innerHTML = h + (welcome ? '<div class="ban">Bienvenue ! Ton compte est créé ✅</div>' : "") +
-    '<div class="card"><div class="pc"><div class="av">' + av(prof.nom) + "</div>" + nbU(prof) + '<div style="min-width:0;flex:1"><b>' + E(p[0]) + "</b> " + E(p[1]) + '<br><span class="st st-' + s + '">' + LAB[s] + "</span></div></div>" +
+    '<div class="card"><div class="pc"><div class="av" id="pcav">' + myAv() + "</div>" + nbU(prof) + '<div style="min-width:0;flex:1"><b>' + E(p[0]) + "</b> " + E(p[1]) + '<br><span class="st st-' + s + '">' + LAB[s] + "</span></div></div>" +
     '<p class="sub" style="margin:14px 0 0;font-size:14px">Inscrit le ' + fdt(prof.creeLe) + "</p>" +
-    '<div class="ab"><button id="pwb">🔑 Changer le mot de passe</button><button id="lo">Se déconnecter</button></div><div id="pwf"></div></div>';
+    '<div class="ab"><button id="pwb">🔑 Changer le mot de passe</button><button id="lo">Se déconnecter</button></div><div id="pwf"></div></div><div class="card" id="pfbox" style="margin-top:14px"></div>';
   $("lo").onclick = function () { auth.signOut(); };
+  profilForm();
   $("pwb").onclick = function () {
     var z = $("pwf"); if (z.innerHTML) { z.innerHTML = ""; return; }
     z.innerHTML = '<form class="fm" style="margin-top:14px"><label>Mot de passe actuel<input type="password" name="o" autocomplete="current-password" required></label><label>Nouveau mot de passe<input type="password" name="n" autocomplete="new-password" required></label><button class="qgo" type="submit">Enregistrer</button><p class="msg"></p></form>';
@@ -328,6 +345,137 @@ function viewCompte() {
         .then(function () { m.className = "msg ok"; m.textContent = "Mot de passe modifié ✅"; f.reset(); })
         .catch(function (er) { m.className = "msg ko"; m.textContent = fr(er); });
     };
+  };
+}
+
+/* ---------- Profils publics : photo, Facebook, bio, statut ---------- */
+/* Stockés dans Firestore : profils/<N° de liste>. Lecture : élèves actifs + admin. Écriture : l'élève sur SON profil (voir firestore-profils.rules). */
+var PUB = window.PROFILS = window.PROFILS || {}, pubAt = 0, pubSt = 0, pubErr = "", pfDirty = false, pfPhoto = "";
+var REL = { couple: "💞 En couple", celib: "🙋 Célibataire", complique: "🤷 C’est compliqué" };
+function isFbOk(u) { return typeof okFb === "function" ? okFb(u) : /^https:\/\/([a-z0-9-]+\.)*(facebook|fb)\.com\//i.test(u); }
+function cleanFb(v) {
+  v = (v || "").trim(); if (!v) return "";
+  if (!/^https?:\/\//i.test(v)) v = "https://" + v.replace(/^\/+/, "");
+  v = v.replace(/^http:\/\//i, "https://");
+  try { v = new URL(v).href; } catch (e) {}
+  return v;
+}
+function myKey() { var r = rowByNum(+prof.id); return r ? r.n : prof.nom; }
+function myAv() { var d = PUB[myKey()]; return d && d.photo ? '<img alt="" src="' + E(d.photo) + '">' : av(prof.nom); }
+
+function loadProfils(force) {
+  if (!db || !allowed()) return Promise.resolve();
+  if (!force && pubSt === 2 && Date.now() - pubAt < 120000) return Promise.resolve();
+  if (pubSt !== 2) pubSt = 1;
+  var tk = seq;
+  function refresh() { if ($("v-compte").classList.contains("on") && !pfDirty) viewCompte(); }
+  return db.collection("profils").get().then(function (q) {
+    if (tk !== seq) return;
+    var m = {};
+    q.forEach(function (s) {
+      var d = s.data() || {}, r = rowByNum(+s.id), o = {}; if (!r) return;
+      if (typeof d.photo === "string" && d.photo.indexOf("data:image/jpeg;base64,") === 0) o.photo = d.photo;
+      if (typeof d.facebook === "string" && d.facebook && isFbOk(d.facebook)) o.facebook = d.facebook;
+      if (typeof d.bio === "string" && d.bio.trim()) o.bio = d.bio;
+      if (REL[d.relation]) o.relation = d.relation;
+      m[r.n] = o;
+    });
+    Object.keys(PUB).forEach(function (k) { delete PUB[k]; });
+    Object.assign(PUB, m);
+    pubSt = 2; pubAt = Date.now(); pubErr = "";
+    if (typeof pp === "function") pp();
+    refresh();
+  }).catch(function (e) { if (tk !== seq) return; if (pubSt !== 2) { pubSt = 3; pubErr = fr(e); } refresh(); });
+}
+
+/* Réduit la photo en carré 220×220 JPEG (≈ 10–20 Ko) avant de l'enregistrer */
+function shrink(file) {
+  return new Promise(function (ok, ko) {
+    var url = URL.createObjectURL(file), im = new Image();
+    im.onload = function () {
+      try {
+        var S = 220, w = im.naturalWidth, h = im.naturalHeight, s = Math.min(w, h); if (!s) throw 0;
+        var cv = document.createElement("canvas"); cv.width = cv.height = S;
+        var x = cv.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, S, S);
+        x.drawImage(im, (w - s) / 2, (h - s) / 2, s, s, 0, 0, S, S);
+        var d = cv.toDataURL("image/jpeg", 0.8); if (d.length > 50000) d = cv.toDataURL("image/jpeg", 0.55);
+        URL.revokeObjectURL(url); d.length > 50000 ? ko() : ok(d);
+      } catch (e) { URL.revokeObjectURL(url); ko(e); }
+    };
+    im.onerror = function () { URL.revokeObjectURL(url); ko(); };
+    im.src = url;
+  });
+}
+
+/* Fiche d'un camarade (ouverte en touchant une ligne de « La classe ») */
+window.openProfil = function (n) {
+  if (MUST && !allowed()) return;
+  var r = null; for (var i = 0; i < ROWS.length; i++) if (ROWS[i].n === n) { r = ROWS[i]; break; } if (!r) return;
+  var me = n === ME, pr = getPr(n), p = nm(n);
+  var pic = me ? window.AD : pr.photo, link = me ? FB : (typeof pr.facebook === "string" && /^https?:\/\//.test(pr.facebook) ? pr.facebook : "");
+  var mine = !isAdmin && !!prof && myKey() === n;
+  var h = '<div class="pfv"><div class="av pfav">' + (pic ? '<img alt="Photo de ' + E(n) + '" src="' + E(pic) + '">' : av(n)) + "</div>" +
+    "<h3><b>" + E(p[0]) + "</b> " + E(p[1]) + "</h3>" +
+    '<div class="pfm">' + nbHTML(r) + (me ? '<span class="chip">Admin</span>' : "") + (pr.relation && REL[pr.relation] ? '<span class="pfrel">' + REL[pr.relation] + "</span>" : "") + "</div>" +
+    (pr.bio ? '<p class="pfbio">' + E(pr.bio) + "</p>" : me ? "" : '<p class="pfbio vide">' + (mine ? "Tu n’as pas encore écrit de bio." : "Pas encore de bio.") + "</p>") +
+    (link ? '<a class="pffb" href="' + E(link) + '" target="_blank" rel="noopener">Accéder à ' + (me ? "mon" : "son") + " profil Facebook</a>" : "") +
+    '</div><div class="ab">' + (mine ? '<button class="pr" data-a="ed">✏️ Modifier mon profil</button>' : "") + '<button data-a="x"' + (mine ? "" : ' style="grid-column:1/-1"') + ">Fermer</button></div>";
+  var M = openM(h);
+  var im = M.el.querySelector(".pfav img"); if (im) im.onerror = function () { im.parentNode.innerHTML = av(n); };
+  M.el.querySelector('[data-a="x"]').onclick = M.close;
+  var ed = M.el.querySelector('[data-a="ed"]'); if (ed) ed.onclick = function () { M.close(); location.hash = "compte"; };
+};
+(function () {
+  var ppl = $("people"); if (!ppl) return;
+  ppl.addEventListener("click", function (e) { if (e.target.closest("a")) return; var r = e.target.closest(".row"); if (r && r.dataset.n) openProfil(r.dataset.n); });
+  ppl.addEventListener("keydown", function (e) { var t = e.target; if ((e.key === "Enter" || e.key === " ") && t.classList && t.classList.contains("row") && t.dataset.n) { e.preventDefault(); openProfil(t.dataset.n); } });
+})();
+
+/* Formulaire « Mon profil public » (page Mon compte) */
+function profilForm() {
+  var z = $("pfbox"); if (!z) return;
+  if (pubSt !== 2) {
+    z.innerHTML = '<h3 style="margin:0 0 6px">Mon profil public</h3>' + (pubSt === 3 ? '<p class="msg ko">' + E(pubErr || "Impossible de charger les profils.") + '</p><button class="qgo" id="pfre">Réessayer</button>' : '<p class="sub" style="margin:0">Chargement…</p>');
+    if (pubSt === 3) $("pfre").onclick = function () { pubSt = 0; profilForm(); loadProfils(true); };
+    else if (pubSt === 0) loadProfils(true);
+    return;
+  }
+  var d = PUB[myKey()] || {};
+  pfPhoto = d.photo || "";
+  z.innerHTML = '<h3 style="margin:0 0 4px">Mon profil public</h3><p class="sub" style="margin:0 0 14px;font-size:14px">Toute la classe le voit en touchant ton nom dans « La classe ».</p>' +
+    '<div class="pfed"><div class="av" id="pfav"></div><div class="bt"><label>📷 Choisir une photo<input type="file" id="pff" accept="image/*" hidden></label><button type="button" id="pfrm">Retirer</button></div></div>' +
+    '<form class="fm" style="margin-top:14px"><label>Lien de ton profil Facebook (facultatif)<input type="text" name="fb" inputmode="url" autocomplete="off" autocapitalize="off" placeholder="https://www.facebook.com/…" maxlength="300"></label>' +
+    '<label>Statut<select name="rel"><option value="">Ne pas afficher</option><option value="couple">💞 En couple</option><option value="celib">🙋 Célibataire</option><option value="complique">🤷 C’est compliqué</option></select></label>' +
+    '<label>Bio<textarea name="bio" rows="4" maxlength="300" placeholder="Parle un peu de toi…"></textarea></label><div class="pfcnt" id="pfc"></div>' +
+    '<button class="qgo" type="submit">Enregistrer mon profil</button><p class="msg"></p></form>';
+  var f = z.querySelector("form"), m = z.querySelector(".msg"), btn = f.querySelector(".qgo");
+  f.elements.fb.value = d.facebook || ""; f.elements.rel.value = d.relation || ""; f.elements.bio.value = d.bio || "";
+  function say(t, k) { m.className = "msg" + (k ? " " + k : ""); m.textContent = t; }
+  function drawAv() { $("pfav").innerHTML = pfPhoto ? '<img alt="" src="' + E(pfPhoto) + '">' : av(prof.nom); }
+  function count() { $("pfc").textContent = f.elements.bio.value.length + " / 300"; }
+  drawAv(); count();
+  f.addEventListener("input", function () { pfDirty = true; count(); });
+  f.addEventListener("change", function () { pfDirty = true; });
+  $("pff").onchange = function () {
+    var file = this.files && this.files[0]; this.value = ""; if (!file) return;
+    say("Préparation de la photo…");
+    shrink(file).then(function (u) { pfPhoto = u; pfDirty = true; drawAv(); say("Photo prête. Appuie sur « Enregistrer mon profil ».", ""); })
+      .catch(function () { say("Impossible de lire cette image. Essaie une photo JPG ou PNG.", "ko"); });
+  };
+  $("pfrm").onclick = function () { pfPhoto = ""; pfDirty = true; drawAv(); say("Photo retirée. Appuie sur « Enregistrer mon profil ».", ""); };
+  f.onsubmit = function (e) {
+    e.preventDefault();
+    var fb = cleanFb(f.elements.fb.value), bio = f.elements.bio.value.trim();
+    if (fb && (!isFbOk(fb) || fb.length > 300)) return say("Ce n’est pas un lien Facebook valide (ex. https://www.facebook.com/ton.profil).", "ko");
+    var data = { num: +prof.id, nom: prof.nom, photo: pfPhoto || "", facebook: fb, bio: bio, relation: f.elements.rel.value, maj: firebase.firestore.FieldValue.serverTimestamp() };
+    say("Enregistrement…"); btn.disabled = true;
+    db.doc("profils/" + prof.id).set(data).then(function () {
+      var o = {}; if (data.photo) o.photo = data.photo; if (fb) o.facebook = fb; if (bio) o.bio = bio; if (REL[data.relation]) o.relation = data.relation;
+      PUB[myKey()] = o; pfDirty = false; f.elements.fb.value = fb; f.elements.bio.value = bio; count();
+      var a = $("pcav"); if (a) a.innerHTML = myAv();
+      if (typeof pp === "function") pp();
+      say("Profil enregistré ✅", "ok"); btn.disabled = false;
+    }).catch(function (er) { say(fr(er), "ko"); btn.disabled = false; });
   };
 }
 
@@ -426,13 +574,14 @@ function manage(id) {
     if (s === "actif" || s === "attente") h += '<button data-a="sus">⏸️ Suspendre</button>';
     if (s === "attente") h += '<button class="dg" data-a="ref">❌ Refuser</button>';
     if (s !== "banni") h += '<button class="dg" data-a="ban">⛔ Bannir</button>';
-    h += '<button data-a="edit">✏️ Modifier</button><button class="dg" data-a="del">🗑️ Supprimer</button><button data-a="x" style="grid-column:1/-1">Fermer</button></div>';
+    h += '<button data-a="edit">✏️ Modifier</button><button class="dg" data-a="del">🗑️ Supprimer</button><button data-a="rp" style="grid-column:1/-1">🧹 Vider son profil public</button><button data-a="x" style="grid-column:1/-1">Fermer</button></div>';
     M.set(h);
     bind({
       ok: function () { save({ statut: "actif", jusqua: null }); },
       sus: durations, ref: function () { confirmM("Refuser l’inscription de " + u.nom + " ?", "Il n’aura pas accès au site. Tu pourras le réactiver plus tard.", "Refuser", function () { save({ statut: "refuse", jusqua: null }); }); },
       ban: function () { confirmM("Bannir " + u.nom + " ?", "Il ne pourra plus utiliser son compte.", "Bannir", function () { save({ statut: "banni", jusqua: null }); }); },
-      edit: edit, del: function () { confirmM("Supprimer le compte de " + u.nom + " ?", "Son profil est effacé (statistiques comprises). Il pourra se réinscrire avec le même mot de passe.", "Supprimer", function () { M.el.querySelectorAll("button").forEach(function (b) { b.disabled = true; }); db.doc("users/" + id).delete().then(function () { delete AD.users[id]; M.close(); drawAdmin(); }).catch(function (e) { alert(fr(e)); home(); }); }); },
+      rp: function () { confirmM("Vider le profil public de " + u.nom + " ?", "Sa photo, son lien Facebook, sa bio et son statut sont effacés. Il pourra les remettre.", "Vider", function () { M.el.querySelectorAll("button").forEach(function (b) { b.disabled = true; }); db.doc("profils/" + id).delete().then(function () { var r = rowByNum(+id); if (r) delete PUB[r.n]; if (typeof pp === "function") pp(); home(); }).catch(function (e) { alert(fr(e)); home(); }); }); },
+      edit: edit, del: function () { confirmM("Supprimer le compte de " + u.nom + " ?", "Son profil est effacé (statistiques comprises). Il pourra se réinscrire avec le même mot de passe.", "Supprimer", function () { M.el.querySelectorAll("button").forEach(function (b) { b.disabled = true; }); db.doc("profils/" + id).delete().catch(noop); { var rr = rowByNum(+id); if (rr) delete PUB[rr.n]; } db.doc("users/" + id).delete().then(function () { delete AD.users[id]; M.close(); drawAdmin(); }).catch(function (e) { alert(fr(e)); home(); }); }); },
       x: function () { M.close(); }
     });
   }
