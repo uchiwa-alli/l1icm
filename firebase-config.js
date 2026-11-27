@@ -6,7 +6,7 @@
 var COMPTES = {
 
   /* Mets true quand tout est rempli ci-dessous */
-  actif: false,
+  actif: true,
 
   /* Copie ces valeurs depuis Firebase :
      Paramètres du projet → Tes applications → Application Web → Configuration */
@@ -23,11 +23,11 @@ var COMPTES = {
 
   /* false = le site reste ouvert à tous, les comptes sont facultatifs
      true  = il faut être connecté avec un compte actif pour voir le site */
-  obligatoire: false,
+  obligatoire: true,
 
   /* false = le compte est actif tout de suite après l'inscription
      true  = le compte reste « en attente » jusqu'à ce que tu le valides */
-  validation: false,
+  validation: true,
 
   /* Ne change pas (doit être identique à firestore.rules) */
   domaine: "l1icm.app"
