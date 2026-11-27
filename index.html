@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html lang="fr">
+<html lang="fr" class="locked">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
@@ -174,9 +174,19 @@ a.qgo{display:inline-block;text-decoration:none}
 .fbox{display:flex;gap:12px;align-items:center;justify-content:space-between;padding:12px 14px}
 .qgo.sm{margin:0;padding:10px 14px;font-size:14px;flex:none}
 .ev small.cd{display:block;margin-top:2px;font-weight:700}
+/* --- Garde d'accès : tant que la connexion n'est pas vérifiée, le contenu reste caché --- */
+html.locked #intro,html.locked #app{display:none!important}
+#gate,#blk{position:fixed;inset:0;z-index:2000;background:var(--bg);overflow:auto;padding:24px 18px calc(24px + env(safe-area-inset-bottom,0px))}
+.gi2{max-width:460px;margin:0 auto}
 </style>
 </head>
 <body>
+<div id="gate"><div class="gi2"><p class="sub" style="text-align:center;margin-top:30vh">Chargement…</p></div></div>
+<script>
+/* Filet de sécurité : si le module de comptes ne démarre pas, le site reste verrouillé */
+setTimeout(function(){var g=document.getElementById("gate");
+ if(g&&!window.__authReady){g.innerHTML='<div class="gi2" style="margin-top:30vh;text-align:center"><p class="sub">Impossible de vérifier ta connexion. Vérifie internet puis réessaie.</p><button class="qgo" onclick="location.reload()">Réessayer</button></div>'}},15000);
+</script>
 <div id="intro">
 <div class="blob b1"></div><div class="blob b2"></div><div class="blob b3"></div>
 <div style="position:relative"><span class="ln l1" id="t1"></span><span class="ln icm" id="t2"></span></div>

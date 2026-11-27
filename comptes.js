@@ -7,10 +7,19 @@
    ============================================================ */
 (function () {
 "use strict";
-var C = window.COMPTES || {}, cfg = C.firebase || {};
-if (!(C.actif && cfg.apiKey && cfg.projectId && C.adminEmail)) return;   /* comptes désactivés : le site reste comme avant */
-
-var DOM = C.domaine || "l1icm.app", ADMIN = String(C.adminEmail).trim().toLowerCase();
+var C = window.COMPTES || {}, cfg = C.firebase || {}, root = document.documentElement;
+window.__authReady = true;                       /* le module a démarré (voir le filet de sécurité dans index.html) */
+if (C.actif === false) {                         /* comptes désactivés volontairement : le site reste ouvert comme avant */
+  root.classList.remove("locked"); var g0 = document.getElementById("gate"); if (g0) g0.remove(); return;
+}
+if (!(cfg.apiKey && cfg.projectId)) {            /* configuration incomplète : on bloque, on n'ouvre jamais le site */
+  var g1 = document.getElementById("gate");
+  if (g1) g1.innerHTML = '<div class="gi2"><p class="sub" style="text-align:center;margin-top:30vh">Le site est momentanément indisponible (configuration des comptes incomplète).</p></div>';
+  return;
+}
+var MUST = C.obligatoire !== false;              /* connexion obligatoire, sauf si firebase-config.js met explicitement false */
+if (!MUST) root.classList.remove("locked");
+var DOM = C.domaine || "l1icm.app";
 var $ = function (i) { return document.getElementById(i); };
 function E(t) { return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) { return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]; }); }
 function noop() {}
@@ -19,8 +28,8 @@ function ms(ts) { return ts && ts.toMillis ? ts.toMillis() : 0; }
 function fdt(ts) { var m = ms(ts); return m ? new Date(m).toLocaleString("fr-FR", { day: "numeric", month: "short", year: "numeric", hour: "2-digit", minute: "2-digit" }) : "—"; }
 function rid() { var a = new Uint8Array(12), s = ""; (window.crypto || window.msCrypto).getRandomValues(a); a.forEach(function (b) { s += ("0" + b.toString(16)).slice(-2); }); return s; }
 
-var auth, db, user = null, prof = null, isAdmin = false, busy = false, ST = "load", notice = "", welcome = false, tracked = false, AD = {};
-var LAB = { actif: "Actif", attente: "En attente", suspendu: "Suspendu", banni: "Banni" };
+var auth, db, user = null, prof = null, isAdmin = false, busy = false, ST = "load", notice = "", welcome = false, tracked = false, AD = {}, unsub = null, seq = 0, wasOk = false, hadSession = false;
+var LAB = { actif: "Actif", attente: "En attente", suspendu: "Suspendu", banni: "Banni", refuse: "Refusé" };
 
 /* ---------- Styles ---------- */
 var css = document.createElement("style");
@@ -41,10 +50,10 @@ css.textContent = "\
 .pk button:hover{border-color:var(--blue)}.pk .hint{color:var(--muted);font-size:13px}\
 .cho{display:flex;gap:12px;align-items:center;border:1.5px solid var(--blue);border-radius:14px;padding:10px 12px;background:var(--surface);font-size:14px;line-height:1.3}\
 .cho span{overflow-wrap:anywhere}.cho button{margin-left:auto;border:0;background:none;color:var(--blue);font-weight:700;flex:none}\
-#gate,#blk{position:fixed;inset:0;z-index:8;background:var(--bg);overflow:auto;padding:24px 18px calc(24px + env(safe-area-inset-bottom,0px))}\
+#gate,#blk{position:fixed;inset:0;z-index:2000;background:var(--bg);overflow:auto;padding:24px 18px calc(24px + env(safe-area-inset-bottom,0px))}\
 .gi2{max-width:460px;margin:0 auto}.gi2 img{width:64px;border-radius:16px;display:block;margin:6px 0 14px}\
 .st{display:inline-block;border-radius:99px;padding:2px 10px;font-size:12px;font-weight:700}\
-.st-actif{background:#d6f5e3;color:#14683d}.st-attente{background:#fff1c9;color:#7a5200}.st-suspendu{background:#ffe0c9;color:#8a3d00}.st-banni{background:#ffd9db;color:#a3131a}\
+.st-actif{background:#d6f5e3;color:#14683d}.st-attente{background:#fff1c9;color:#7a5200}.st-suspendu{background:#ffe0c9;color:#8a3d00}.st-banni{background:#ffd9db;color:#a3131a}.st-refuse{background:#e6e8f0;color:#3c4060}#af{flex-wrap:wrap}#af button{flex:1 0 30%}\
 .pc{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.pc .av{width:64px;height:64px;margin:0}.pc .nb{min-width:70px}\
 .sg{display:grid;grid-template-columns:repeat(2,1fr);gap:10px;margin:0 0 14px}@media(min-width:700px){.sg{grid-template-columns:repeat(4,1fr)}}\
 .sc{background:var(--surface);border:1px solid var(--line);border-radius:16px;padding:12px 14px}.sc b{display:block;font-size:28px;letter-spacing:-.03em;line-height:1.1}.sc span{color:var(--muted);font-size:13px}\
@@ -82,12 +91,13 @@ tAdm.hidden = true;
 
 function mkSec(id) { var s = document.createElement("section"); s.className = "view"; s.id = id; $("app").appendChild(s); return s; }
 mkSec("v-compte"); mkSec("v-admin");
-var gate = document.createElement("div"); gate.id = "gate"; gate.hidden = true; document.body.appendChild(gate);
+var gate = $("gate"); if (!gate) { gate = document.createElement("div"); gate.id = "gate"; document.body.appendChild(gate); }
 var blk = document.createElement("div"); blk.id = "blk"; blk.hidden = true; document.body.appendChild(blk);
 
 title.compte = "Mon compte"; title.admin = "Espace admin";
 var _go = window.go;
 window.go = function (v) {
+  if (MUST && !allowed()) return;                /* aucune page interne sans compte actif, même en tapant l'URL (#admin, #quiz…) */
   if (v === "admin" && !isAdmin) { if (ST === "load") { _go("compte"); return; } location.hash = "compte"; return; }
   _go(v);
   if (v === "compte") viewCompte();
@@ -103,7 +113,8 @@ loadScript(BASE + "app-compat.js")
     firebase.initializeApp(cfg); auth = firebase.auth(); db = firebase.firestore();
     auth.onAuthStateChanged(onAuth);
   })
-  .catch(function () { ST = "err"; render(); });
+  .catch(function () { ST = "err"; notice = "Impossible de joindre le serveur. Vérifie ta connexion."; render(); });
+setTimeout(function () { if (ST === "load") { ST = "err"; notice = "Le serveur met trop de temps à répondre."; render(); } }, 20000);
 render();
 
 function fr(e) {
@@ -129,20 +140,45 @@ function nbHTML(r) { return '<div class="nb g' + r.g + '"><b' + (r.nums.length >
 function nbU(u) { var g = u.num <= G1 ? 1 : 2; return '<div class="nb g' + g + '"><b>' + u.num + "</b><small>GROUPE " + g + "</small></div>"; }
 
 /* ---------- Authentification ---------- */
+/* Accès autorisé = administrateur (document admins/<uid> lu sur Firestore) OU élève dont le profil est « actif ».
+   Les règles Firestore refont la même vérification côté serveur : ce code ne fait que l'affichage. */
+function allowed() { return ST === "in" && (isAdmin || (!!prof && eff(prof) === "actif")); }
+function stopWatch() { if (unsub) { try { unsub(); } catch (e) {} unsub = null; } }
+function wipe() {                                /* efface tout ce qui est privé quand la session se termine */
+  AD = {}; welcome = false;
+  $("v-admin").innerHTML = ""; $("v-compte").innerHTML = "";
+  _go("home");
+  try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
+}
 function onAuth(u) {
   if (busy) return Promise.resolve();
+  var tok = ++seq; stopWatch();
   user = u; prof = null; isAdmin = false;
-  if (!u) { ST = "out"; first(); render(); return Promise.resolve(); }
-  var em = (u.email || "").toLowerCase();
-  if (em === ADMIN) { isAdmin = true; ST = "in"; first(); render(); route(); return Promise.resolve(); }
-  var m = em.match(/^(\d+)@(.+)$/);
-  if (!m || m[2] !== DOM) { return auth.signOut(); }
-  return db.doc("users/" + m[1]).get().then(function (s) {
-    if (!s.exists) { notice = "Ce compte n’existe plus. Inscris-toi à nouveau ou contacte l’admin."; return auth.signOut(); }
-    prof = s.data(); prof.id = m[1];
-    try { if (!sessionStorage.getItem("l1icm_t")) { sessionStorage.setItem("l1icm_t", "1"); var F = firebase.firestore.FieldValue; db.doc("users/" + m[1]).update({ derniereConnexion: F.serverTimestamp(), connexions: F.increment(1) }).catch(noop); } } catch (e) {}
-    ST = "in"; first(); render(); route();
-  }).catch(function (e) { ST = "err"; notice = fr(e); render(); });
+  if (!u) { ST = "out"; if (hadSession) { hadSession = false; wipe(); } render(); return Promise.resolve(); }
+  hadSession = true; ST = "load"; render();      /* pendant la vérification : écran « Chargement… » uniquement */
+  return db.doc("admins/" + u.uid).get().then(function (a) {
+    if (tok !== seq) return;
+    if (a.exists) { isAdmin = true; ST = "in"; render(); return; }
+    var m = (u.email || "").toLowerCase().match(/^(\d{1,3})@(.+)$/);
+    if (!m || m[2] !== DOM) { notice = "Ce compte n’est pas autorisé sur ce site."; return auth.signOut(); }
+    return watch(m[1], tok);
+  }).catch(function (e) { if (tok !== seq) return; ST = "err"; notice = fr(e); render(); });
+}
+function watch(num, tok) {                       /* suit le profil en direct : une suspension ou un bannissement s'applique tout de suite */
+  return new Promise(function (resolve) {
+    var firstSnap = true;
+    unsub = db.doc("users/" + num).onSnapshot(function (s) {
+      if (tok !== seq) { resolve(); return; }
+      if (!s.exists && s.metadata && s.metadata.fromCache) { ST = "err"; notice = "Pas de connexion internet. Réessaie."; render(); resolve(); return; }
+      if (!s.exists) { stopWatch(); notice = "Ce compte n’existe plus. Inscris-toi à nouveau ou contacte l’admin."; auth.signOut(); resolve(); return; }
+      prof = s.data(); prof.id = num; ST = "in";
+      if (firstSnap) { firstSnap = false; bump(num); }
+      render(); resolve();
+    }, function (e) { if (tok === seq) { ST = "err"; notice = fr(e); render(); } resolve(); });
+  });
+}
+function bump(num) {
+  try { if (!sessionStorage.getItem("l1icm_t")) { sessionStorage.setItem("l1icm_t", "1"); var F = firebase.firestore.FieldValue; db.doc("users/" + num).update({ derniereConnexion: F.serverTimestamp(), connexions: F.increment(1) }).catch(noop); } } catch (e) {}
 }
 function first() { if (!tracked) { tracked = true; if (!isAdmin) track(); } }
 
@@ -167,7 +203,7 @@ function register(r, pw) {
     return ref.get().then(function (s) {
       if (s.exists) return;
       var F = firebase.firestore.FieldValue;
-      return ref.set({ num: +num, nom: r.n, groupe: r.g, statut: C.validation ? "attente" : "actif", jusqua: null, bgAdmin: true, note: "", creeLe: F.serverTimestamp(), derniereConnexion: F.serverTimestamp(), connexions: 1 });
+      return ref.set({ num: +num, nom: r.n, groupe: r.g, statut: "attente", jusqua: null, bgAdmin: true, note: "", creeLe: F.serverTimestamp(), derniereConnexion: F.serverTimestamp(), connexions: 1 });
     });
   }).then(function () { busy = false; welcome = true; return onAuth(auth.currentUser); })
     .catch(function (e) { busy = false; if (auth.currentUser) auth.signOut().catch(noop); throw e; });
@@ -230,15 +266,16 @@ function authUI(box, mode) {
 
 /* ---------- Affichage ---------- */
 function render() {
-  var blocked = ST === "in" && !isAdmin && prof && eff(prof) !== "actif";
-  acc.textContent = ST === "in" ? (isAdmin ? "🛡️" : "👤 " + prof.num) : "👤";
-  tAcc.querySelector("b").textContent = ST === "in" ? "Mon compte" : "Compte";
-  tAcc.querySelector("span").textContent = ST === "in" ? (isAdmin ? "Connecté en admin" : "N° " + prof.num + " · Groupe " + (prof.num <= G1 ? 1 : 2)) : "Connexion · Inscription";
-  tAdm.hidden = !isAdmin;
+  var ok = allowed(), blocked = ST === "in" && !isAdmin && !!prof && !ok;
+  acc.textContent = ok ? (isAdmin ? "🛡️" : "👤 " + prof.num) : "👤";
+  tAcc.querySelector("b").textContent = ok ? "Mon compte" : "Compte";
+  tAcc.querySelector("span").textContent = ok ? (isAdmin ? "Connecté en admin" : "N° " + prof.num + " · Groupe " + (prof.num <= G1 ? 1 : 2)) : "Connexion · Inscription";
+  tAdm.hidden = !(ok && isAdmin);
   tAdm.querySelector("b").textContent = "Espace admin";
   tAdm.querySelector("span").textContent = "Statistiques et comptes";
 
-  var needGate = !!C.obligatoire && ST !== "in";
+  root.classList.toggle("locked", MUST && !ok);  /* tant que l'accès n'est pas confirmé, l'intro et le site restent cachés */
+  var needGate = MUST && !ok && !blocked;
   gate.hidden = !needGate;
   if (needGate) {
     var g = '<div class="gi2"><img src="' + LOGO + '" alt=""><h2>L1 ICM</h2><p class="sub">Connecte-toi avec ton compte de la classe pour accéder au site.</p><div class="card" id="gb">';
@@ -248,15 +285,23 @@ function render() {
   }
   blk.hidden = !blocked;
   if (blocked) {
-    var s = eff(prof), t = s === "banni" ? ["⛔", "Compte banni", "Ton compte a été banni par l’admin."] : s === "suspendu" ? ["⏸️", "Compte suspendu", prof.jusqua ? "Ton compte est suspendu jusqu’au " + fdt(prof.jusqua) + "." : "Ton compte est suspendu jusqu’à nouvel ordre."] : ["⏳", "Compte en attente", "L’admin doit valider ton inscription. Reviens un peu plus tard."];
-    blk.innerHTML = '<div class="gi2"><div class="card" style="text-align:center"><div style="font-size:56px">' + t[0] + "</div><h2>" + t[1] + '</h2><p class="sub" style="margin:0 auto 6px">' + t[2] + ' Pour toute question, contacte l’admin.</p><button class="qgo" id="blko">Se déconnecter</button></div></div>';
+    var s = eff(prof), T = {
+      banni: ["⛔", "Compte banni", "Ton compte a été banni par l’admin. Pour toute question, contacte l’admin."],
+      refuse: ["❌", "Inscription refusée", "Ton inscription a été refusée par l’admin. Pour toute question, contacte l’admin."],
+      suspendu: ["⏸️", "Compte suspendu", (prof.jusqua ? "Ton compte est suspendu jusqu’au " + fdt(prof.jusqua) + "." : "Ton compte est suspendu jusqu’à nouvel ordre.") + " Pour toute question, contacte l’admin."],
+      attente: ["⏳", "Compte en attente", "Votre compte est en attente de validation par l’administrateur. Cet écran se met à jour tout seul dès la validation."]
+    }, t = T[s] || ["⛔", "Accès refusé", "Ce compte n’a pas accès au site. Contacte l’admin."];
+    blk.innerHTML = '<div class="gi2"><div class="card" style="text-align:center"><div style="font-size:56px">' + t[0] + "</div><h2>" + t[1] + '</h2><p class="sub" style="margin:0 auto 6px">' + t[2] + '</p><button class="qgo" id="blko">Se déconnecter</button></div></div>';
     $("blko").onclick = function () { auth.signOut(); };
   }
+  if (ok && !wasOk) { wasOk = true; first(); route(); }
+  wasOk = ok;
   if ($("v-compte").classList.contains("on")) viewCompte();
 }
 
 function viewCompte() {
   var b = $("v-compte"), h = "<h2>Mon compte</h2>";
+  if (MUST && !allowed()) { b.innerHTML = ""; return; }
   if (ST === "load") { b.innerHTML = h + '<p class="sub">Chargement…</p>'; return; }
   if (ST === "err") { b.innerHTML = h + '<div class="card"><p class="msg ko">' + E(notice || "Impossible de joindre le serveur.") + '</p><button class="qgo" onclick="location.reload()">Réessayer</button></div>'; return; }
   if (ST === "out") { b.innerHTML = h + '<p class="sub">Inscris-toi avec ton nom de la liste de la classe pour créer ton compte.</p><div class="card" id="ab"></div>'; authUI($("ab")); return; }
@@ -327,8 +372,8 @@ function loadAdmin() {
 
 function drawAdmin() {
   var y = window.scrollY, b = $("v-admin"), U = Object.keys(AD.users).map(function (k) { return AD.users[k]; });
-  var cnt = { actif: 0, attente: 0, suspendu: 0, banni: 0 }, g1 = 0, g2 = 0;
-  U.forEach(function (u) { cnt[eff(u)]++; if (u.num <= G1) g1++; else g2++; });
+  var cnt = { actif: 0, attente: 0, suspendu: 0, banni: 0, refuse: 0 }, g1 = 0, g2 = 0;
+  U.forEach(function (u) { cnt[eff(u)] = (cnt[eff(u)] || 0) + 1; if (u.num <= G1) g1++; else g2++; });
   var t0 = new Date(); t0.setHours(0, 0, 0, 0);
   var vis7 = AD.vis.filter(function (v) { return ms(v.derniere) >= Date.now() - 7 * 864e5; }).length;
   var today = AD.days[AD.days.length - 1].n, max = Math.max.apply(null, AD.days.map(function (x) { return x.n; }).concat([1]));
@@ -340,7 +385,7 @@ function drawAdmin() {
     '<div class="card" style="margin-bottom:14px"><b>Inscriptions</b> <span class="sub" style="margin:0">· ' + U.length + " sur " + ROWS.length + " élèves (" + pct + " %)</span><div class=\"pgb\"><i style=\"width:" + pct + '%"></i></div><p class="sub" style="margin:8px 0 0;font-size:13px">Groupe 1 : ' + g1 + " inscrits · Groupe 2 : " + g2 + " inscrits · " + cnt.actif + " actifs</p></div>" +
     '<div class="card" style="margin-bottom:14px"><b>Visites · 14 derniers jours</b><div class="ch">' +
     AD.days.map(function (x) { return "<div>" + (x.n ? "<b>" + x.n + "</b>" : "") + '<i style="height:' + Math.round(x.n / max * 100) + '%"></i>' + x.d.getDate() + "</div>"; }).join("") + "</div></div>" +
-    '<h3 style="margin:18px 2px 0">Comptes</h3><div class="seg" id="af">' + [["all", "Tous", U.length], ["actif", "Actifs", cnt.actif], ["attente", "Attente", cnt.attente], ["suspendu", "Suspendus", cnt.suspendu], ["banni", "Bannis", cnt.banni]].map(function (x) { return '<button data-f="' + x[0] + '"' + (AD.f === x[0] ? ' class="on"' : "") + ">" + x[1] + "<small>" + x[2] + "</small></button>"; }).join("") + "</div>" +
+    '<h3 style="margin:18px 2px 0">Comptes</h3><div class="seg" id="af">' + [["all", "Tous", U.length], ["actif", "Actifs", cnt.actif], ["attente", "Attente", cnt.attente], ["suspendu", "Suspendus", cnt.suspendu], ["banni", "Bannis", cnt.banni], ["refuse", "Refusés", cnt.refuse]].map(function (x) { return '<button data-f="' + x[0] + '"' + (AD.f === x[0] ? ' class="on"' : "") + ">" + x[1] + "<small>" + x[2] + "</small></button>"; }).join("") + "</div>" +
     '<input id="aq" type="search" placeholder="Rechercher un nom ou un numéro" value="' + E(AD.q) + '" style="margin-bottom:10px"><div class="rows" id="alist"></div>';
   b.innerHTML = h;
   $("rf").onclick = loadAdmin;
@@ -377,14 +422,16 @@ function manage(id) {
       '<p class="sub" style="margin:12px 0 0;font-size:14px">Inscrit le ' + fdt(u.creeLe) + "<br>Dernière connexion : " + fdt(u.derniereConnexion) + " · " + (u.connexions || 0) + " connexion(s)" +
       (s === "suspendu" ? "<br>Suspendu " + (u.jusqua ? "jusqu’au " + fdt(u.jusqua) : "jusqu’à nouvel ordre") : "") + (u.note ? "<br>Note : " + E(u.note) : "") + '</p><div class="ab">';
     if (s === "attente") h += '<button class="pr" data-a="ok">✅ Valider</button>';
-    if (s === "suspendu" || s === "banni") h += '<button class="pr" data-a="ok">↩️ Réactiver</button>';
+    if (s === "suspendu" || s === "banni" || s === "refuse") h += '<button class="pr" data-a="ok">↩️ Réactiver</button>';
     if (s === "actif" || s === "attente") h += '<button data-a="sus">⏸️ Suspendre</button>';
+    if (s === "attente") h += '<button class="dg" data-a="ref">❌ Refuser</button>';
     if (s !== "banni") h += '<button class="dg" data-a="ban">⛔ Bannir</button>';
     h += '<button data-a="edit">✏️ Modifier</button><button class="dg" data-a="del">🗑️ Supprimer</button><button data-a="x" style="grid-column:1/-1">Fermer</button></div>';
     M.set(h);
     bind({
       ok: function () { save({ statut: "actif", jusqua: null }); },
-      sus: durations, ban: function () { confirmM("Bannir " + u.nom + " ?", "Il ne pourra plus utiliser son compte.", "Bannir", function () { save({ statut: "banni", jusqua: null }); }); },
+      sus: durations, ref: function () { confirmM("Refuser l’inscription de " + u.nom + " ?", "Il n’aura pas accès au site. Tu pourras le réactiver plus tard.", "Refuser", function () { save({ statut: "refuse", jusqua: null }); }); },
+      ban: function () { confirmM("Bannir " + u.nom + " ?", "Il ne pourra plus utiliser son compte.", "Bannir", function () { save({ statut: "banni", jusqua: null }); }); },
       edit: edit, del: function () { confirmM("Supprimer le compte de " + u.nom + " ?", "Son profil est effacé (statistiques comprises). Il pourra se réinscrire avec le même mot de passe.", "Supprimer", function () { M.el.querySelectorAll("button").forEach(function (b) { b.disabled = true; }); db.doc("users/" + id).delete().then(function () { delete AD.users[id]; M.close(); drawAdmin(); }).catch(function (e) { alert(fr(e)); home(); }); }); },
       x: function () { M.close(); }
     });
