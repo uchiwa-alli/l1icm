@@ -88,6 +88,10 @@ css.textContent = "\
 #cfban em{margin-left:auto;flex:none;font-style:normal;font-weight:800;font-size:12px;background:#ffd23f;color:#2b2200;border-radius:99px;padding:5px 11px}\
 #cfban em::before{content:'';display:inline-block;width:7px;height:7px;border-radius:50%;background:#e5484d;margin-right:6px;animation:cfp 1.4s ease-in-out infinite}\
 @keyframes cfp{50%{opacity:.25}}@media(prefers-reduced-motion:reduce){#cfban em::before{animation:none}}\
+.sdb{margin:0 0 12px}.sdn{display:flex;gap:6px;align-items:baseline;font-size:15px;overflow-wrap:anywhere}.sdn span{margin-left:auto;font-weight:800}\
+.sdt{height:8px;border-radius:99px;background:var(--surface);border:1px solid var(--line);margin-top:4px;overflow:hidden}.sdt i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--navy));border-radius:99px}\
+.sdq{width:100%;box-sizing:border-box;font:inherit;padding:11px 14px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}.sdc{display:grid;gap:8px;margin-top:10px}\
+.sdp{text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:14px;padding:11px 14px;font-size:15px}\
 .cfc{margin-bottom:10px}.cft{margin:0 0 8px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45;font-size:16px}\
 .cfa{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.cfa button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:7px 13px;font-weight:700;font-size:13px}.cfa button.on{background:var(--navy);color:var(--on-navy);border-color:var(--navy)}.cfa button.dg{border-color:#e5484d;color:#e5484d}.cfa button:disabled{opacity:.6}\
 .cfk{margin-top:12px;border-top:1px solid var(--line);padding-top:10px;display:grid;gap:8px}.cfq{font-size:14px;line-height:1.35;overflow-wrap:anywhere}.cfx{border:0;background:none;font-size:13px}\
@@ -105,7 +109,7 @@ function mkTile(id, ico, b, s) {
   var el = document.createElement("button");
   el.className = "tile"; el.id = id;
   el.innerHTML = "<i>" + ico + "</i><b></b><span></span>";
-  el.onclick = function () { location.hash = { "t-adm": "admin", "t-conf": "conf" }[id] || "compte"; };
+  el.onclick = function () { location.hash = { "t-adm": "admin", "t-conf": "conf", "t-sond": "sondages" }[id] || "compte"; };
   $("tiles").appendChild(el);
   return el;
 }
@@ -116,19 +120,21 @@ tConf.id = "cfban"; tConf.hidden = true; tConf.innerHTML = "<i>💌</i><span><b>
 tConf.onclick = function () { location.hash = "conf"; };
 $("qhero").parentNode.insertBefore(tConf, $("qhero"));
 function seenCf() { try { return !!localStorage.getItem("l1icm_cf_vu"); } catch (e) { return false; } }
+var tSond = mkTile("t-sond", "🏆"); tSond.hidden = true;
 
 function mkSec(id) { var s = document.createElement("section"); s.className = "view"; s.id = id; $("app").appendChild(s); return s; }
-mkSec("v-compte"); mkSec("v-admin"); mkSec("v-conf");
+mkSec("v-compte"); mkSec("v-admin"); mkSec("v-conf"); mkSec("v-sondages");
 var gate = $("gate"); if (!gate) { gate = document.createElement("div"); gate.id = "gate"; document.body.appendChild(gate); }
 var blk = document.createElement("div"); blk.id = "blk"; blk.hidden = true; document.body.appendChild(blk);
 
-title.compte = "Mon compte"; title.admin = "Espace admin"; title.conf = "Confessions";
+title.compte = "Mon compte"; title.admin = "Espace admin"; title.conf = "Confessions"; title.sondages = "Qui est le plus… ?";
 var _go = window.go;
 window.go = function (v) {
   if (MUST && !allowed()) return;                /* aucune page interne sans compte actif, même en tapant l'URL (#admin, #quiz…) */
   if (v === "admin" && !isAdmin) { if (ST === "load") { _go("compte"); return; } location.hash = "compte"; return; }
   _go(v);
   if (v === "cls") loadProfils();
+  if (v === "sondages") viewSond();
   if (v === "conf") { try { localStorage.setItem("l1icm_cf_vu", "1"); } catch (e) {} tConf.querySelector("em").hidden = true; viewConf(); }
   if (v === "compte") viewCompte();
   if (v === "admin") loadAdmin();
@@ -177,7 +183,7 @@ function stopWatch() { if (unsub) { try { unsub(); } catch (e) {} unsub = null; 
 function wipe() {                                /* efface tout ce qui est privé quand la session se termine */
   AD = {}; welcome = false; pfDirty = false; pfPhoto = ""; pubAt = 0; pubSt = 0;
   Object.keys(PUB).forEach(function (k) { delete PUB[k]; }); if (typeof pp === "function") pp();
-  $("v-admin").innerHTML = ""; $("v-compte").innerHTML = ""; $("v-conf").innerHTML = ""; CF = { posts: [], auth: {}, pend: [], mine: [], com: {}, open: {} };
+  $("v-admin").innerHTML = ""; $("v-compte").innerHTML = ""; $("v-conf").innerHTML = ""; $("v-sondages").innerHTML = ""; SD = { list: [], mine: {} }; CF = { posts: [], auth: {}, pend: [], mine: [], com: {}, open: {} };
   _go("home");
   try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
 }
@@ -303,6 +309,7 @@ function render() {
   tAcc.querySelector("span").textContent = ok ? (isAdmin ? "Connecté en admin" : "N° " + prof.num + " · Groupe " + (prof.num <= G1 ? 1 : 2)) : "Connexion · Inscription";
   tAdm.hidden = !(ok && isAdmin);
   tConf.hidden = !ok; tConf.querySelector("small").textContent = isAdmin ? "Valider et modérer les messages" : "Anonyme pour la classe · écris, aime, commente"; tConf.querySelector("em").hidden = seenCf();
+  tSond.hidden = !ok; tSond.querySelector("b").textContent = "Qui est le plus… ?"; tSond.querySelector("span").textContent = "Vote pour tes camarades";
   tAdm.querySelector("b").textContent = "Espace admin";
   tAdm.querySelector("span").textContent = "Statistiques et comptes";
 
@@ -601,6 +608,64 @@ $("v-conf").addEventListener("submit", function (e) {
     bt.set(db.doc("confAuteurs/c-" + cr.id), { kind: "com", postId: id, num: +prof.id, nom: prof.nom, texte: t, creeLe: ts });
     bt.commit().then(function () { loadCom(id); }).catch(function (er) { alert(fr(er)); btn.disabled = false; });
   }
+});
+
+/* ---------- Sondages « Qui est le plus… ? » (1 vote par élève et par sondage) ---------- */
+/* sondages/<id> {question, ouvert, scores:{N°:votes}} · sondages/<id>/votes/<N° votant> {pour} (lisible par l'admin et le votant) */
+var SD = { list: [], mine: {} };
+function norm(s) { return (s || "").toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, ""); }
+function viewSond() {
+  var b = $("v-sondages"); if (MUST && !allowed()) { b.innerHTML = ""; return; }
+  b.innerHTML = '<div class="rt"><h2 style="margin:8px 0 6px">🏆 Qui est le plus… ?</h2><button id="sdr">↻ Actualiser</button></div><p class="sub">Vote pour un camarade. Les résultats s’affichent après ton vote.</p>' +
+    (isAdmin ? '<div class="card"><form class="fm" id="sdf"><label>Nouvelle question<input type="text" name="q" maxlength="80" placeholder="Qui est le plus drôle ?"></label><button class="qgo" type="submit">Lancer le sondage</button><p class="msg"></p></form></div>' : "") +
+    '<div id="sdl"><p class="sub">Chargement…</p></div>';
+  $("sdr").onclick = loadSond; loadSond();
+}
+function loadSond() {
+  return db.collection("sondages").orderBy("creeLe", "desc").limit(20).get().then(function (q) {
+    SD.list = []; q.forEach(function (s) { var d = s.data(); d.id = s.id; SD.list.push(d); });
+    if (isAdmin) return;
+    return Promise.all(SD.list.map(function (p) { return db.doc("sondages/" + p.id + "/votes/" + prof.id).get().then(function (s) { SD.mine[p.id] = s.exists ? s.data().pour : null; }); }));
+  }).then(drawSond).catch(function (er) { var l = $("sdl"); if (l) l.innerHTML = '<p class="msg ko">' + E(fr(er)) + "</p>"; });
+}
+function pollHTML(p) {
+  var voted = !isAdmin && SD.mine[p.id] != null, h = '<div class="card cfc" data-id="' + p.id + '"><h3 style="margin:0 0 12px">' + E(p.question) + (p.ouvert ? "" : " 🔒") + "</h3>";
+  if (isAdmin || voted || !p.ouvert) {
+    var sc = p.scores || {}, ks = Object.keys(sc).sort(function (a, c) { return sc[c] - sc[a]; }), mx = ks.length ? sc[ks[0]] : 1, tot = ks.reduce(function (s, k) { return s + sc[k]; }, 0);
+    h += (ks.slice(0, isAdmin ? 10 : 5).map(function (k, i) {
+      var r = rowByNum(+k), nn = r ? nm(r.n) : ["N° " + k, ""];
+      return '<div class="sdb"><div class="sdn">' + ["🥇 ", "🥈 ", "🥉 "][i] + "<b>" + E(nn[0]) + "</b> " + E(nn[1]) + "<span>" + sc[k] + '</span></div><div class="sdt"><i style="width:' + Math.round(sc[k] / mx * 100) + '%"></i></div></div>'; }).join("") || '<p class="sub">Aucun vote pour le moment.</p>') +
+      '<small class="sub">' + tot + " vote" + (tot > 1 ? "s" : "") + (voted ? " · tu as voté ✓" : "") + "</small>";
+  } else h += '<input class="sdq" type="search" placeholder="Cherche un camarade…" autocomplete="off"><div class="sdc"></div>';
+  if (isAdmin) h += '<div class="ab"><button data-a="sdclose">' + (p.ouvert ? "🔒 Clore" : "🔓 Rouvrir") + '</button><button class="dg" data-a="sddel">🗑️ Supprimer</button></div>';
+  return h + "</div>";
+}
+function drawSond() { var l = $("sdl"); if (l) l.innerHTML = SD.list.length ? SD.list.map(pollHTML).join("") : '<p class="sub">Aucun sondage pour le moment.</p>'; }
+$("v-sondages").addEventListener("input", function (e) {
+  var q = e.target; if (!q.classList.contains("sdq")) return;
+  var z = q.nextElementSibling, t = norm(q.value.trim()), me = +prof.id, h = ""; if (!t) { z.innerHTML = ""; return; }
+  var L = ROWS.filter(function (r) { return norm(r.n).indexOf(t) > -1 && (r.nums || []).indexOf(me) < 0; }).slice(0, 8);
+  z.innerHTML = L.map(function (r) { var p = nm(r.n); return '<button class="sdp" data-a="vote" data-k="' + r.nums[0] + '"><b>' + E(p[0]) + "</b> " + E(p[1]) + "</button>"; }).join("") || '<p class="sub" style="margin:0">Personne trouvé.</p>';
+});
+$("v-sondages").addEventListener("click", function (e) {
+  var b = e.target.closest("button[data-a]"); if (!b || b.disabled) return;
+  var card = b.closest("[data-id]"), id = card && card.dataset.id, a = b.dataset.a, F = firebase.firestore.FieldValue, p = id && SD.list.filter(function (x) { return x.id === id; })[0];
+  function fail(er) { alert(fr(er)); b.disabled = false; }
+  if (a === "vote") {
+    var k = +b.dataset.k, r = rowByNum(k);
+    if (!confirm("Voter pour " + (r ? r.n : "N° " + k) + " ? Tu ne pourras plus changer ton vote.")) return;
+    var bt = db.batch(), up = {}; up["scores." + k] = F.increment(1); b.disabled = true;
+    bt.set(db.doc("sondages/" + id + "/votes/" + prof.id), { pour: k, creeLe: F.serverTimestamp() }); bt.update(db.doc("sondages/" + id), up);
+    bt.commit().then(loadSond).catch(fail);
+  } else if (a === "sdclose") { b.disabled = true; db.doc("sondages/" + id).update({ ouvert: !p.ouvert }).then(loadSond).catch(fail); }
+  else if (a === "sddel") { if (!confirm("Supprimer ce sondage et ses votes ?")) return; b.disabled = true; db.doc("sondages/" + id).delete().then(loadSond).catch(fail); }
+});
+$("v-sondages").addEventListener("submit", function (e) {
+  e.preventDefault(); var f = e.target, t = f.elements.q.value.trim(), m = f.querySelector(".msg"), btn = f.querySelector("button"); if (!t || !isAdmin) return;
+  btn.disabled = true;
+  db.collection("sondages").add({ question: t, ouvert: true, creeLe: firebase.firestore.FieldValue.serverTimestamp(), scores: {} })
+    .then(function () { f.reset(); btn.disabled = false; m.className = "msg ok"; m.textContent = "Sondage lancé ✅"; loadSond(); })
+    .catch(function (er) { m.className = "msg ko"; m.textContent = fr(er); btn.disabled = false; });
 });
 
 /* ---------- Statistiques de visite ---------- */
