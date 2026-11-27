@@ -82,6 +82,10 @@ css.textContent = "\
 .pfed{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.pfed .av{width:76px;height:76px;margin:0;flex:none;font-size:26px}\
 .pfed .bt{display:flex;gap:8px;flex-wrap:wrap}.pfed .bt button,.pfed .bt label{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:9px 14px;font-weight:700;font-size:13px;cursor:pointer}\
 .pfcnt{margin:-6px 2px 0;text-align:right;font-size:12px;color:var(--muted)}\
+.cfc{margin-bottom:10px}.cft{margin:0 0 8px;white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.45;font-size:16px}\
+.cfa{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.cfa button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:7px 13px;font-weight:700;font-size:13px}.cfa button.on{background:var(--navy);color:var(--on-navy);border-color:var(--navy)}.cfa button.dg{border-color:#e5484d;color:#e5484d}.cfa button:disabled{opacity:.6}\
+.cfk{margin-top:12px;border-top:1px solid var(--line);padding-top:10px;display:grid;gap:8px}.cfq{font-size:14px;line-height:1.35;overflow-wrap:anywhere}.cfx{border:0;background:none;font-size:13px}\
+.cfcf{display:flex;gap:8px}.cfcf input{flex:1;min-width:0;font:inherit;padding:10px 12px;border-radius:12px;border:1px solid var(--line);background:var(--surface);color:var(--ink)}.cfcf button{border:0;border-radius:12px;padding:0 14px;font-weight:800;background:var(--navy);color:var(--on-navy)}\
 ";
 document.head.appendChild(css);
 
@@ -95,25 +99,26 @@ function mkTile(id, ico, b, s) {
   var el = document.createElement("button");
   el.className = "tile"; el.id = id;
   el.innerHTML = "<i>" + ico + "</i><b></b><span></span>";
-  el.onclick = function () { location.hash = id === "t-adm" ? "admin" : "compte"; };
+  el.onclick = function () { location.hash = { "t-adm": "admin", "t-conf": "conf" }[id] || "compte"; };
   $("tiles").appendChild(el);
   return el;
 }
-var tAcc = mkTile("t-acc", "👤"), tAdm = mkTile("t-adm", "🛡️");
-tAdm.hidden = true;
+var tAcc = mkTile("t-acc", "👤"), tConf = mkTile("t-conf", "💌"), tAdm = mkTile("t-adm", "🛡️");
+tAdm.hidden = true; tConf.hidden = true;
 
 function mkSec(id) { var s = document.createElement("section"); s.className = "view"; s.id = id; $("app").appendChild(s); return s; }
-mkSec("v-compte"); mkSec("v-admin");
+mkSec("v-compte"); mkSec("v-admin"); mkSec("v-conf");
 var gate = $("gate"); if (!gate) { gate = document.createElement("div"); gate.id = "gate"; document.body.appendChild(gate); }
 var blk = document.createElement("div"); blk.id = "blk"; blk.hidden = true; document.body.appendChild(blk);
 
-title.compte = "Mon compte"; title.admin = "Espace admin";
+title.compte = "Mon compte"; title.admin = "Espace admin"; title.conf = "Confessions";
 var _go = window.go;
 window.go = function (v) {
   if (MUST && !allowed()) return;                /* aucune page interne sans compte actif, même en tapant l'URL (#admin, #quiz…) */
   if (v === "admin" && !isAdmin) { if (ST === "load") { _go("compte"); return; } location.hash = "compte"; return; }
   _go(v);
   if (v === "cls") loadProfils();
+  if (v === "conf") viewConf();
   if (v === "compte") viewCompte();
   if (v === "admin") loadAdmin();
 };
@@ -161,7 +166,7 @@ function stopWatch() { if (unsub) { try { unsub(); } catch (e) {} unsub = null; 
 function wipe() {                                /* efface tout ce qui est privé quand la session se termine */
   AD = {}; welcome = false; pfDirty = false; pfPhoto = ""; pubAt = 0; pubSt = 0;
   Object.keys(PUB).forEach(function (k) { delete PUB[k]; }); if (typeof pp === "function") pp();
-  $("v-admin").innerHTML = ""; $("v-compte").innerHTML = "";
+  $("v-admin").innerHTML = ""; $("v-compte").innerHTML = ""; $("v-conf").innerHTML = ""; CF = { posts: [], auth: {}, pend: [], mine: [], com: {}, open: {} };
   _go("home");
   try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
 }
@@ -286,6 +291,7 @@ function render() {
   tAcc.querySelector("b").textContent = ok ? "Mon compte" : "Compte";
   tAcc.querySelector("span").textContent = ok ? (isAdmin ? "Connecté en admin" : "N° " + prof.num + " · Groupe " + (prof.num <= G1 ? 1 : 2)) : "Connexion · Inscription";
   tAdm.hidden = !(ok && isAdmin);
+  tConf.hidden = !ok; tConf.querySelector("b").textContent = "Confessions"; tConf.querySelector("span").textContent = isAdmin ? "Valider et modérer" : "Anonyme · validé par l’admin";
   tAdm.querySelector("b").textContent = "Espace admin";
   tAdm.querySelector("span").textContent = "Statistiques et comptes";
 
@@ -478,6 +484,113 @@ function profilForm() {
     }).catch(function (er) { say(fr(er), "ko"); btn.disabled = false; });
   };
 }
+
+/* ---------- Confessions anonymes (chaque message est validé par l'admin) ---------- */
+/* confessions/<id> = messages publiés (SANS auteur) · confAuteurs/<id> = auteur, lisible par l'admin (et l'auteur pour ses propres messages) */
+var CF = { posts: [], auth: {}, pend: [], mine: [], com: {}, open: {} };
+function tagFor(pid) { var k = "l1icm_tag_" + pid, t = null; try { t = localStorage.getItem(k); } catch (e) {} if (!t) { t = rid().slice(0, 8); try { localStorage.setItem(k, t); } catch (e) {} } return t; }
+function ago(ts) { var m = ms(ts); if (!m) return "à l’instant"; var s = (Date.now() - m) / 1000; if (s < 60) return "à l’instant"; if (s < 3600) return Math.floor(s / 60) + " min"; if (s < 86400) return Math.floor(s / 3600) + " h"; return Math.floor(s / 86400) + " j"; }
+function cfPost(id) { return CF.posts.filter(function (x) { return x.id === id; })[0]; }
+
+function viewConf() {
+  var b = $("v-conf"); if (MUST && !allowed()) { b.innerHTML = ""; return; }
+  b.innerHTML = '<div class="rt"><h2 style="margin:8px 0 6px">💌 Confessions</h2><button id="cfr">↻ Actualiser</button></div>' +
+    '<p class="sub">Anonyme pour la classe : l’admin voit l’auteur et valide chaque message avant sa publication.</p>' +
+    (isAdmin ? "" : '<div class="card"><form class="fm" id="cff"><label>Ton message<textarea name="t" rows="3" maxlength="400" placeholder="Une déclaration, une anecdote, un mot pour quelqu’un… Reste respectueux."></textarea></label><button class="qgo" type="submit">Envoyer pour validation</button><p class="msg"></p></form></div>') +
+    '<div id="cfm"></div><div id="cfl"><p class="sub">Chargement…</p></div>';
+  $("cfr").onclick = function () { CF.com = {}; loadConf(); };
+  loadConf();
+}
+function loadConf() {
+  var jobs = [db.collection("confessions").orderBy("creeLe", "desc").limit(60).get(),
+    isAdmin ? db.collection("confAuteurs").where("kind", "==", "post").get() : db.collection("confAuteurs").where("num", "==", +prof.id).where("kind", "==", "post").get()];
+  return Promise.all(jobs).then(function (q) {
+    CF.posts = []; CF.auth = {}; CF.pend = []; CF.mine = [];
+    q[0].forEach(function (s) { var d = s.data(); d.id = s.id; CF.posts.push(d); });
+    q[1].forEach(function (s) { var d = s.data(); d.id = s.id; CF.auth[d.id] = d; if (isAdmin) { if (d.statut === "attente") CF.pend.push(d); } else if (d.statut === "attente" || d.statut === "refuse") CF.mine.push(d); });
+    CF.pend.sort(function (a, c) { return ms(a.creeLe) - ms(c.creeLe); }); CF.mine.sort(function (a, c) { return ms(c.creeLe) - ms(a.creeLe); });
+    drawConf();
+  }).catch(function (er) { var l = $("cfl"); if (l) l.innerHTML = '<p class="msg ko">' + E(fr(er)) + "</p>"; });
+}
+function postHTML(p, n) {
+  var A = p.aime || [], S = p.signale || [], a = CF.auth[p.id], liked = A.indexOf(n) > -1, rep = S.indexOf(n) > -1;
+  if (S.length >= 3 && !isAdmin) return '<div class="card cfc"><p class="sub" style="margin:0">🚩 Message signalé, masqué en attendant l’avis de l’admin.</p></div>';
+  return '<div class="card cfc" data-id="' + p.id + '"><p class="cft">' + E(p.texte) + "</p><small class=\"sub\">" + ago(p.creeLe) + (isAdmin && a ? " · ✍️ " + E(a.nom) + " (N° " + a.num + ")" : "") + (isAdmin && S.length ? " · 🚩 " + S.length : "") + "</small>" +
+    '<div class="cfa"><button data-a="like"' + (isAdmin ? " disabled" : "") + (liked ? ' class="on"' : "") + ">❤️ " + A.length + '</button><button data-a="com">💬 ' + (CF.com[p.id] ? CF.com[p.id].length : "Commenter") + "</button>" +
+    (isAdmin ? '<button class="dg" data-a="del">🗑️</button>' : '<button data-a="rep"' + (rep ? " disabled" : "") + ">" + (rep ? "Signalé ✓" : "🚩") + "</button>") + "</div>" +
+    (CF.open[p.id] ? '<div class="cfk" id="k-' + p.id + '"></div>' : "") + "</div>";
+}
+function drawConf() {
+  var m = $("cfm"), l = $("cfl"); if (!m || !l) return;
+  var n = isAdmin ? 0 : +prof.id, h = "";
+  if (isAdmin && CF.pend.length) h += '<h3 style="margin:14px 2px 8px">À valider (' + CF.pend.length + ")</h3>" + CF.pend.map(function (d) {
+    return '<div class="card cfc" data-id="' + d.id + '"><p class="cft">' + E(d.texte) + '</p><small class="sub">✍️ ' + E(d.nom) + " · N° " + d.num + " · " + ago(d.creeLe) + '</small><div class="ab"><button class="pr" data-a="pub">✅ Publier</button><button class="dg" data-a="ref">❌ Refuser</button></div></div>'; }).join("");
+  if (!isAdmin && CF.mine.length) h += CF.mine.map(function (d) {
+    return '<div class="card cfc"><p class="cft">' + E(d.texte) + '</p><small class="sub">' + (d.statut === "attente" ? "⏳ En attente de validation (toi seul le vois)" : "❌ Refusé par l’admin") + "</small></div>"; }).join("");
+  m.innerHTML = h;
+  l.innerHTML = (CF.posts.length ? "" : '<p class="sub">Aucun message publié pour le moment.</p>') + CF.posts.map(function (p) { return postHTML(p, n); }).join("");
+  Object.keys(CF.open).forEach(function (id) { if (CF.open[id]) drawCom(id); });
+}
+function loadCom(id) {
+  var jobs = [db.collection("confessions/" + id + "/commentaires").orderBy("creeLe").get()];
+  if (isAdmin) jobs.push(db.collection("confAuteurs").where("kind", "==", "com").where("postId", "==", id).get());
+  return Promise.all(jobs).then(function (q) {
+    var au = {}; if (q[1]) q[1].forEach(function (s) { au[s.id] = s.data(); });
+    CF.com[id] = []; q[0].forEach(function (s) { var d = s.data(); d.id = s.id; d.au = au["c-" + s.id]; CF.com[id].push(d); });
+    drawConf();
+  }).catch(function (er) { CF.open[id] = false; alert(fr(er)); drawConf(); });
+}
+function drawCom(id) {
+  var z = $("k-" + id); if (!z) return; var L = CF.com[id];
+  if (!L) { z.innerHTML = '<p class="sub" style="margin:0">Chargement…</p>'; return; }
+  var tags = [];
+  z.innerHTML = L.map(function (c) {
+    var i = tags.indexOf(c.tag); if (i < 0) i = tags.push(c.tag) - 1;
+    return '<div class="cfq"><b>Anonyme ' + (i + 1) + "</b> " + E(c.texte) + ' <small class="sub">' + ago(c.creeLe) + (c.au ? " · ✍️ " + E(c.au.nom) + " (N° " + c.au.num + ")" : "") + "</small>" +
+      (isAdmin ? ' <button class="cfx" data-a="dcom" data-c="' + c.id + '">🗑️</button>' : "") + "</div>"; }).join("") +
+    (isAdmin ? "" : '<form class="cfcf" data-id="' + id + '"><input type="text" name="t" maxlength="300" placeholder="Ton commentaire (anonyme)" autocomplete="off"><button type="submit">Envoyer</button></form>');
+}
+$("v-conf").addEventListener("click", function (e) {
+  var b = e.target.closest("button[data-a]"); if (!b || b.disabled) return;
+  var card = b.closest("[data-id]"), id = card && card.dataset.id, a = b.dataset.a, F = firebase.firestore.FieldValue, bt;
+  function fail(er) { alert(fr(er)); b.disabled = false; }
+  if (a === "like" || a === "rep") {
+    var p = cfPost(id), ch = a === "like" ? "aime" : "signale", n = +prof.id, L = p[ch] || [], on = L.indexOf(n) > -1, up = {};
+    if (a === "rep" && !confirm("Signaler ce message à l’admin ?")) return;
+    up[ch] = on ? F.arrayRemove(n) : F.arrayUnion(n); b.disabled = true;
+    db.doc("confessions/" + id).update(up).then(function () { p[ch] = on ? L.filter(function (x) { return x !== n; }) : L.concat([n]); drawConf(); }).catch(fail);
+  } else if (a === "com") {
+    CF.open[id] = !CF.open[id]; if (CF.open[id] && !CF.com[id]) loadCom(id); drawConf();
+  } else if (a === "pub") {
+    var d = CF.auth[id]; b.disabled = true; bt = db.batch();
+    bt.set(db.doc("confessions/" + id), { texte: d.texte, creeLe: F.serverTimestamp(), aime: [], signale: [] });
+    bt.update(db.doc("confAuteurs/" + id), { statut: "publie" }); bt.commit().then(loadConf).catch(fail);
+  } else if (a === "ref") {
+    b.disabled = true; db.doc("confAuteurs/" + id).update({ statut: "refuse" }).then(loadConf).catch(fail);
+  } else if (a === "del") {
+    if (!confirm("Supprimer ce message ?")) return; b.disabled = true; bt = db.batch();
+    bt.delete(db.doc("confessions/" + id)); if (CF.auth[id]) bt.update(db.doc("confAuteurs/" + id), { statut: "supprime" });
+    bt.commit().then(loadConf).catch(fail);
+  } else if (a === "dcom") {
+    if (!confirm("Supprimer ce commentaire ?")) return; b.disabled = true;
+    db.doc("confessions/" + id + "/commentaires/" + b.dataset.c).delete().then(function () { loadCom(id); }).catch(fail);
+  }
+});
+$("v-conf").addEventListener("submit", function (e) {
+  e.preventDefault(); var f = e.target, F = firebase.firestore.FieldValue, t = f.elements.t.value.trim(), btn = f.querySelector("button"), m = f.querySelector(".msg"); if (!t || isAdmin) return;
+  if (f.id === "cff") {
+    if (CF.mine.filter(function (d) { return d.statut === "attente"; }).length >= 3) { m.className = "msg ko"; m.textContent = "Tu as déjà 3 messages en attente. Patiente un peu."; return; }
+    var ref = db.collection("confAuteurs").doc(); btn.disabled = true; m.className = "msg"; m.textContent = "Envoi…";
+    ref.set({ kind: "post", postId: ref.id, num: +prof.id, nom: prof.nom, texte: t, statut: "attente", creeLe: F.serverTimestamp() })
+      .then(function () { f.reset(); btn.disabled = false; loadConf().then(function () { var z = $("cff"); if (z) { var q = z.querySelector(".msg"); q.className = "msg ok"; q.textContent = "Envoyé ✅ L’admin va le valider avant publication."; } }); })
+      .catch(function (er) { m.className = "msg ko"; m.textContent = fr(er); btn.disabled = false; });
+  } else if (f.classList.contains("cfcf")) {
+    var id = f.dataset.id, cr = db.collection("confessions/" + id + "/commentaires").doc(), bt = db.batch(), ts = F.serverTimestamp(); btn.disabled = true;
+    bt.set(cr, { texte: t, tag: tagFor(id), creeLe: ts });
+    bt.set(db.doc("confAuteurs/c-" + cr.id), { kind: "com", postId: id, num: +prof.id, nom: prof.nom, texte: t, creeLe: ts });
+    bt.commit().then(function () { loadCom(id); }).catch(function (er) { alert(fr(er)); btn.disabled = false; });
+  }
+});
 
 /* ---------- Statistiques de visite ---------- */
 function track() {
