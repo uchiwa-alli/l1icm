@@ -82,6 +82,17 @@ css.textContent = "\
 .pfed{display:flex;gap:14px;align-items:center;flex-wrap:wrap}.pfed .av{width:76px;height:76px;margin:0;flex:none;font-size:26px}\
 .pfed .bt{display:flex;gap:8px;flex-wrap:wrap}.pfed .bt button,.pfed .bt label{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:9px 14px;font-weight:700;font-size:13px;cursor:pointer}\
 .pfcnt{margin:-6px 2px 0;text-align:right;font-size:12px;color:var(--muted)}\
+#acban{display:flex;align-items:center;gap:14px;width:100%;text-align:left;margin:0 0 14px;padding:16px;border:0;border-radius:20px;background:linear-gradient(135deg,#1f9d6b,#0f6b4a);color:#fff;transition:transform .15s}#acban[hidden]{display:none}#acban:active{transform:scale(.98)}\
+#acban i{font-style:normal;font-size:28px;width:52px;height:52px;display:grid;place-items:center;border-radius:16px;background:rgba(255,255,255,.2);flex:none}#acban span{display:grid;gap:2px;min-width:0}#acban b{font-size:19px;line-height:1.2}#acban small{font-size:14px;opacity:.95;line-height:1.3}\
+.achero{text-align:center}.achero .lv{font-size:44px;line-height:1}.achero h2{margin:6px 0 2px}.acbar{height:10px;border-radius:99px;background:var(--surface);border:1px solid var(--line);overflow:hidden;margin:10px 0 6px}.acbar i{display:block;height:100%;background:linear-gradient(90deg,var(--blue),var(--navy));border-radius:99px;transition:width .4s}\
+.acst{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-top:8px;font-weight:700;font-size:14px}.acbd{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:12px}.acbd span{font-size:12px;border:1px solid var(--line);border-radius:99px;padding:4px 10px;background:var(--surface)}.acbd .off{opacity:.45;filter:grayscale(1)}\
+.acact{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin:12px 0}.acact button{border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:16px;padding:14px 10px;font-weight:800;font-size:15px}.acact button:disabled{opacity:.5}\
+.acr{display:flex;gap:8px;margin-bottom:8px}.acc{flex:1;text-align:left;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:16px;padding:13px 14px;display:grid;gap:2px}.acc b{font-size:15px}.acc small{color:var(--muted);font-size:13px}.acc:disabled{opacity:.55}.acc.ok{border-color:#2fa36b}.acp{display:grid;place-items:center;width:48px;border:1px solid var(--line);border-radius:16px;background:var(--surface);text-decoration:none;font-size:20px}\
+.acq h3{margin:14px 0;font-size:19px;line-height:1.35;overflow-wrap:anywhere}.aco{display:grid;gap:10px}.aop{text-align:left;border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:14px;padding:14px;font-size:16px;line-height:1.3;overflow-wrap:anywhere}.aop.good{border-color:#2fa36b;background:rgba(47,163,107,.14)}.aop.bad{border-color:#e5484d;background:rgba(229,72,77,.12)}.aop:disabled{opacity:1}\
+.acx{margin-top:14px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--surface);line-height:1.4;font-size:15px}.acx b{display:block;margin-bottom:4px}.acn{width:100%;margin-top:12px;border:0;border-radius:14px;padding:14px;font-weight:800;font-size:16px;background:var(--navy);color:var(--on-navy)}\
+.acp2{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:700;gap:10px}.acfin{text-align:center}.acfin .big{font-size:54px}.acfin h2{margin:6px 0}\
+.acbr{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;margin-bottom:8px;background:var(--surface)}.acbr.me{border-color:var(--blue)}.acbr b{overflow-wrap:anywhere}.acbr .xp{margin-left:auto;font-weight:800;white-space:nowrap}\
+.actab{display:flex;gap:8px;margin:10px 0}.actab button{flex:1;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:9px;font-weight:700}.actab button.on{background:var(--navy);color:var(--on-navy);border-color:var(--navy)}\
 #cfban{display:flex;align-items:center;gap:14px;width:100%;text-align:left;margin:0 0 14px;padding:16px;border:0;border-radius:20px;background:linear-gradient(135deg,var(--navy),var(--blue));color:var(--on-navy);transition:transform .15s}#cfban[hidden]{display:none}#cfban:active{transform:scale(.98)}\
 #cfban i{font-style:normal;font-size:28px;width:52px;height:52px;display:grid;place-items:center;border-radius:16px;background:rgba(255,255,255,.18);flex:none}\
 #cfban span{display:grid;gap:2px;min-width:0}#cfban b{font-size:19px;line-height:1.2}#cfban small{font-size:14px;opacity:.92;line-height:1.3}\
@@ -119,23 +130,28 @@ var tConf = document.createElement("button");   /* bannière « Confessions » t
 tConf.id = "cfban"; tConf.hidden = true; tConf.innerHTML = "<i>💌</i><span><b>Confessions</b><small></small></span><em>Nouveau</em>";
 tConf.onclick = function () { location.hash = "conf"; };
 $("qhero").parentNode.insertBefore(tConf, $("qhero"));
+var tAc = document.createElement("button");   /* bannière « Académie » */
+tAc.id = "acban"; tAc.hidden = true; tAc.innerHTML = "<i>🎓</i><span><b>Académie</b><small>Révise tes cours, gagne des XP, grimpe au classement</small></span>";
+tAc.onclick = function () { location.hash = "acad"; };
+$("qhero").parentNode.insertBefore(tAc, $("qhero"));
 function seenCf() { try { return !!localStorage.getItem("l1icm_cf_vu"); } catch (e) { return false; } }
 var tSond = mkTile("t-sond", "🏆"); tSond.hidden = true;
 
 function mkSec(id) { var s = document.createElement("section"); s.className = "view"; s.id = id; $("app").appendChild(s); return s; }
-mkSec("v-compte"); mkSec("v-admin"); mkSec("v-conf"); mkSec("v-sondages");
+mkSec("v-compte"); mkSec("v-admin"); mkSec("v-conf"); mkSec("v-sondages"); mkSec("v-acad");
 var gate = $("gate"); if (!gate) { gate = document.createElement("div"); gate.id = "gate"; document.body.appendChild(gate); }
 var blk = document.createElement("div"); blk.id = "blk"; blk.hidden = true; document.body.appendChild(blk);
 
-title.compte = "Mon compte"; title.admin = "Espace admin"; title.conf = "Confessions"; title.sondages = "Qui est le plus… ?";
+title.compte = "Mon compte"; title.admin = "Espace admin"; title.conf = "Confessions"; title.sondages = "Qui est le plus… ?"; title.acad = "Académie";
 var _go = window.go;
 window.go = function (v) {
   if (MUST && !allowed()) return;                /* aucune page interne sans compte actif, même en tapant l'URL (#admin, #quiz…) */
   if (v === "admin" && !isAdmin) { if (ST === "load") { _go("compte"); return; } location.hash = "compte"; return; }
+  if (v !== "acad" && AC && AC.run && AC.page === "run") acAbort();
   _go(v);
   if (v === "cls") loadProfils();
+  if (v === "acad") viewAcad();
   if (v === "sondages") viewSond();
-  if (v === "conf") { try { localStorage.setItem("l1icm_cf_vu", "1"); } catch (e) {} tConf.querySelector("em").hidden = true; viewConf(); }
   if (v === "compte") viewCompte();
   if (v === "admin") loadAdmin();
 };
@@ -183,7 +199,7 @@ function stopWatch() { if (unsub) { try { unsub(); } catch (e) {} unsub = null; 
 function wipe() {                                /* efface tout ce qui est privé quand la session se termine */
   AD = {}; welcome = false; pfDirty = false; pfPhoto = ""; pubAt = 0; pubSt = 0;
   Object.keys(PUB).forEach(function (k) { delete PUB[k]; }); if (typeof pp === "function") pp();
-  $("v-admin").innerHTML = ""; $("v-compte").innerHTML = ""; $("v-conf").innerHTML = ""; $("v-sondages").innerHTML = ""; SD = { list: [], mine: {} }; CF = { posts: [], auth: {}, pend: [], mine: [], com: {}, open: {} };
+  $("v-admin").innerHTML = ""; $("v-compte").innerHTML = ""; $("v-conf").innerHTML = ""; $("v-sondages").innerHTML = ""; SD = { list: [], mine: {} }; AC = { doc: null, st: 0, page: "hub", run: null, board: null, tab: "sem", chain: null, err: "" }; CF = { posts: [], auth: {}, pend: [], mine: [], com: {}, open: {} };
   _go("home");
   try { history.replaceState(null, "", location.pathname + location.search); } catch (e) {}
 }
@@ -310,6 +326,7 @@ function render() {
   tAdm.hidden = !(ok && isAdmin);
   tConf.hidden = !ok; tConf.querySelector("small").textContent = isAdmin ? "Valider et modérer les messages" : "Anonyme pour la classe · écris, aime, commente"; tConf.querySelector("em").hidden = seenCf();
   tSond.hidden = !ok; tSond.querySelector("b").textContent = "Qui est le plus… ?"; tSond.querySelector("span").textContent = "Vote pour tes camarades";
+  tAc.hidden = !(ok && acOn()); if (isAdmin) tAc.querySelector("small").textContent = "Progression et classement de la classe";
   tAdm.querySelector("b").textContent = "Espace admin";
   tAdm.querySelector("span").textContent = "Statistiques et comptes";
 
@@ -333,7 +350,7 @@ function render() {
     blk.innerHTML = '<div class="gi2"><div class="card" style="text-align:center"><div style="font-size:56px">' + t[0] + "</div><h2>" + t[1] + '</h2><p class="sub" style="margin:0 auto 6px">' + t[2] + '</p><button class="qgo" id="blko">Se déconnecter</button></div></div>';
     $("blko").onclick = function () { auth.signOut(); };
   }
-  if (ok && !wasOk) { wasOk = true; first(); loadProfils(true); route(); }
+  if (ok && !wasOk) { wasOk = true; first(); loadProfils(true); acLoad(); route(); }
   wasOk = ok;
   if ($("v-compte").classList.contains("on")) viewCompte();
 }
@@ -666,6 +683,168 @@ $("v-sondages").addEventListener("submit", function (e) {
   db.collection("sondages").add({ question: t, ouvert: true, creeLe: firebase.firestore.FieldValue.serverTimestamp(), scores: {} })
     .then(function () { f.reset(); btn.disabled = false; m.className = "msg ok"; m.textContent = "Sondage lancé ✅"; loadSond(); })
     .catch(function (er) { m.className = "msg ko"; m.textContent = fr(er); btn.disabled = false; });
+});
+
+/* ---------- Académie : parcours par chapitre, XP, niveaux, série, erreurs, classement ---------- */
+/* Questions : academie.js · Progression : Firestore progres/<N°> · Erreurs à revoir : stockées sur l'appareil */
+var AC = { doc: null, st: 0, page: "hub", run: null, board: null, tab: "sem", chain: null, err: "" };
+var LVL = [["Novice", "🌱", 0], ["Apprenti", "📘", 150], ["Initié", "🔍", 400], ["Confirmé", "⚡", 800], ["Expert", "🧠", 1400], ["Maître", "🏅", 2200], ["Légende", "👑", 3500]];
+function acOn() { return typeof ACADEMIE !== "undefined" && ACADEMIE && ACADEMIE.matieres && ACADEMIE.matieres.length > 0; }
+function lvl(xp) { var i = 0; while (i + 1 < LVL.length && xp >= LVL[i + 1][2]) i++; return i; }
+function dstr(d) { d = d || new Date(); return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
+function lundi() { var d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return dstr(d); }
+function hier() { var d = new Date(); d.setDate(d.getDate() - 1); return dstr(d); }
+function shuf(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
+function acSt() { var d = AC.doc || {}; return { xp: d.xp || 0, serie: d.serie || 0, dernier: d.dernier || "", sem: d.sem || "", xpSem: d.xpSem || 0, ch: d.ch || {} }; }
+function serieNow(s) { return s.dernier === dstr() || s.dernier === hier() ? s.serie : 0; }
+function acFind(cid) { var r = null; ACADEMIE.matieres.forEach(function (m) { m.chapitres.forEach(function (c, i) { if (c.id === cid) r = { m: m, c: c, i: i }; }); }); return r; }
+function acMake(c, i) { var x = c.qs[i], ix = shuf([0, 1, 2, 3]); return { id: c.id + "#" + i, q: x.q, o: ix.map(function (k) { return x.o[k]; }), a: ix.indexOf(x.a), e: x.e }; }
+function acPool(mid) { var a = []; ACADEMIE.matieres.forEach(function (m) { if (m.id === mid) m.chapitres.forEach(function (c) { c.qs.forEach(function (_, i) { a.push(acMake(c, i)); }); }); }); return shuf(a); }
+function acErrs() { try { return JSON.parse(localStorage.getItem("l1icm_ac_" + prof.id) || "{}") || {}; } catch (e) { return {}; } }
+function acErrUp(id, good) { var o = acErrs(), b = o[id]; if (good) { if (b) { if (b >= 3) delete o[id]; else o[id] = b + 1; } } else o[id] = 1; try { localStorage.setItem("l1icm_ac_" + prof.id, JSON.stringify(o)); } catch (e) {} }
+function acBadges(s) {
+  var ch = s.ch, ids = Object.keys(ch);
+  return [{ k: "p", t: "🌱 Premier pas", ok: ids.length > 0 }, { k: "s", t: "💯 Sans faute", ok: ids.some(function (k) { return ch[k] >= 100; }) },
+    { k: "m", t: "📚 Matière complète", ok: ACADEMIE.matieres.some(function (m) { return m.chapitres.every(function (c) { return ch[c.id] >= 70; }); }) },
+    { k: "f", t: "🔥 Série de 7 jours", ok: serieNow(s) >= 7 }, { k: "e", t: "🧠 Expert", ok: s.xp >= 1400 }];
+}
+function acSnap() { var s = acSt(); return { lvl: lvl(s.xp), bd: acBadges(s).filter(function (b) { return b.ok; }).map(function (b) { return b.k; }) }; }
+function onAc() { return $("v-acad").classList.contains("on"); }
+function acBanner() { var s = acSt(), li = lvl(s.xp), se = serieNow(s); if (!isAdmin && AC.doc) tAc.querySelector("small").textContent = LVL[li][1] + " " + LVL[li][0] + " · " + s.xp + " XP" + (se ? " · 🔥 " + se + " j" : ""); }
+
+function acLoad() {
+  if (!db || !allowed() || !acOn()) return Promise.resolve();
+  if (isAdmin) { AC.st = 2; return Promise.resolve(); }
+  AC.st = 1; var tk = seq;
+  return db.doc("progres/" + prof.id).get().then(function (s) { if (tk !== seq) return; AC.doc = s.exists ? s.data() : null; AC.st = 2; acBanner(); if (onAc() && AC.page === "hub") acDraw(); })
+    .catch(function (e) { if (tk !== seq) return; AC.st = 3; AC.err = fr(e); if (onAc() && AC.page === "hub") acDraw(); });
+}
+function acSave(gain, upd) {
+  AC.chain = (AC.chain || Promise.resolve()).catch(function () {}).then(function () {
+    var s = acSt(), t = dstr(), first = s.dernier !== t, serie = first ? (s.dernier === hier() ? s.serie : 0) + 1 : s.serie, tot = gain + (first ? 20 : 0), ch = Object.assign({}, s.ch);
+    if (upd) ch[upd.id] = Math.max(ch[upd.id] || 0, upd.pct);
+    var n = { num: +prof.id, nom: prof.nom, xp: s.xp + tot, serie: serie, dernier: t, sem: lundi(), xpSem: (s.sem === lundi() ? s.xpSem : 0) + tot, ch: ch, maj: firebase.firestore.FieldValue.serverTimestamp() };
+    return db.doc("progres/" + prof.id).set(n).then(function () { n.maj = null; AC.doc = n; acBanner(); return tot; });
+  });
+  return AC.chain;
+}
+
+function viewAcad() {
+  var b = $("v-acad"); if (MUST && !allowed()) { b.innerHTML = ""; return; }
+  if (!acOn()) { b.innerHTML = '<p class="sub">L’Académie n’est pas encore disponible (fichier academie.js manquant).</p>'; return; }
+  if (!AC.run) AC.page = isAdmin ? "board" : "hub";
+  if (AC.st === 0 || AC.st === 3) acLoad();
+  acDraw();
+}
+function acDraw() {
+  $("v-acad").innerHTML = '<h2 style="margin:8px 0 10px">🎓 Académie</h2><div id="acbody"></div>';
+  if (AC.page === "run") acQuestion(); else if (AC.page === "end") acEndView(); else if (AC.page === "board") acBoardView(); else acHub();
+}
+function acHub() {
+  var z = $("acbody");
+  if (AC.st !== 2) { z.innerHTML = AC.st === 3 ? '<p class="msg ko">' + E(AC.err) + '</p><button class="qgo" data-a="retry">Réessayer</button>' : '<p class="sub">Chargement…</p>'; return; }
+  var s = acSt(), li = lvl(s.xp), nx = LVL[li + 1], pc = nx ? Math.round((s.xp - LVL[li][2]) / (nx[2] - LVL[li][2]) * 100) : 100, se = serieNow(s), ne = Object.keys(acErrs()).length, xs = s.sem === lundi() ? s.xpSem : 0;
+  var h = '<div class="card achero"><div class="lv">' + LVL[li][1] + "</div><h2>" + LVL[li][0] + '</h2><div class="acbar"><i style="width:' + pc + '%"></i></div><small class="sub">' + s.xp + " XP" + (nx ? " · encore " + (nx[2] - s.xp) + " XP pour devenir " + nx[0] + " " + nx[1] : " · niveau maximum !") +
+    '</small><div class="acst"><span>🔥 ' + se + " jour" + (se > 1 ? "s" : "") + "</span><span>⭐ " + xs + ' XP cette semaine</span></div><div class="acbd">' + acBadges(s).map(function (x) { return '<span class="' + (x.ok ? "" : "off") + '">' + x.t + "</span>"; }).join("") + "</div></div>";
+  h += '<div class="acact"><button data-a="err"' + (ne ? "" : " disabled") + ">🔁 Mes erreurs (" + ne + ')</button><button data-a="board">🏆 Classement</button>' +
+    ACADEMIE.matieres.map(function (m) { return '<button data-a="mar" data-id="' + m.id + '">🏃 Marathon ' + m.emoji + " " + E(m.id.toUpperCase()) + "</button>"; }).join("") + "</div>";
+  h += ACADEMIE.matieres.map(function (m) {
+    return '<h3 style="margin:16px 2px 8px">' + m.emoji + " " + E(m.nom) + "</h3>" + m.chapitres.map(function (c, i) {
+      var sc = s.ch[c.id], prev = i ? s.ch[m.chapitres[i - 1].id] || 0 : 100, lock = prev < 70;
+      return '<div class="acr"><button class="acc' + (sc >= 70 ? " ok" : "") + '" data-a="chap" data-id="' + c.id + '"' + (lock ? " disabled" : "") + "><b>" + E(c.titre) + "</b><small>" +
+        (lock ? "🔒 Réussis le chapitre précédent (70 %)" : sc >= 100 ? "⭐ 100 % · refais-le pour t’entraîner" : sc >= 70 ? "✅ Réussi · meilleur score " + sc + " %" : sc != null ? "Meilleur score " + sc + " % · vise 70 %" : "▶ À faire · " + Math.min(c.qs.length, 12) + " questions") +
+        '</small></button><a class="acp" href="' + E(c.fichier) + '" target="_blank" rel="noopener" title="Lire le cours">📖</a></div>'; }).join(""); }).join("");
+  z.innerHTML = h;
+}
+
+function acStart(kind, id) {
+  var qs = [];
+  if (kind === "ch") { var f = acFind(id); qs = shuf(f.c.qs.map(function (_, i) { return i; })).slice(0, 12).map(function (i) { return acMake(f.c, i); }); }
+  else if (kind === "mar") qs = acPool(id);
+  else { var er = acErrs(); qs = Object.keys(er).sort(function (a, b) { return er[a] - er[b]; }).slice(0, 10).map(function (k) { var p = k.split("#"), f2 = acFind(p[0]); return f2 && f2.c.qs[+p[1]] ? acMake(f2.c, +p[1]) : null; }).filter(Boolean); }
+  if (!qs.length) return;
+  AC.run = { kind: kind, id: id, qs: qs, i: 0, ok: 0, xp: 0, pend: 0, combo: 0, vies: 3, lock: false, log: [], before: acSnap() };
+  AC.page = "run"; acDraw();
+}
+function acLast() { var r = AC.run; return r.kind === "mar" ? r.vies <= 0 : r.i + 1 >= r.qs.length; }
+function acQuestion() {
+  var r = AC.run, x = r.qs[r.i], n = r.qs.length;
+  var top = r.kind === "mar" ? '<div class="acp2"><span>' + "❤️".repeat(r.vies) + "🖤".repeat(3 - r.vies) + "</span><span>🔥 combo " + r.combo + "</span><span>+" + r.xp + " XP</span></div>" :
+    '<div class="acp2"><span>Question ' + (r.i + 1) + "/" + n + "</span><span>+" + r.xp + ' XP</span></div><div class="acbar"><i style="width:' + Math.round(r.i / n * 100) + '%"></i></div>';
+  $("acbody").innerHTML = '<div class="acq">' + top + "<h3>" + E(x.q) + '</h3><div class="aco">' + x.o.map(function (t, k) { return '<button class="aop" data-a="pick" data-k="' + k + '">' + E(t) + "</button>"; }).join("") + '</div><div id="acx"></div></div>';
+}
+function acPick(k) {
+  var r = AC.run, x = r.qs[r.i]; if (r.lock) return; r.lock = true;
+  var good = k === x.a, g = 0;
+  $("acbody").querySelectorAll(".aop").forEach(function (b, j) { b.disabled = true; if (j === x.a) b.classList.add("good"); else if (j === k) b.classList.add("bad"); });
+  if (good) { r.ok++; r.combo++; g = r.kind === "ch" ? 10 : (r.kind === "mar" && r.combo >= 5 ? 10 : 5); } else { r.combo = 0; if (r.kind === "mar") r.vies--; }
+  r.xp += g; r.pend += g; r.log.push(x.id); acErrUp(x.id, good);
+  if (r.kind === "mar" && r.log.length % 10 === 0 && r.pend > 0) { var p = r.pend; r.pend = 0; acSave(p).catch(function () {}); }
+  var z = $("acx"); z.className = "acx";
+  z.innerHTML = "<b>" + (good ? "✅ Bonne réponse ! +" + g + " XP" : "❌ Pas tout à fait") + "</b>" + E(x.e) + '<button class="acn" data-a="next">' + (acLast() ? "Voir mon résultat" : "Suivant →") + "</button>";
+  z.scrollIntoView({ block: "nearest", behavior: "smooth" });
+}
+function acNext() {
+  var r = AC.run; if (acLast()) return acFinish();
+  r.i++; r.lock = false; if (r.kind === "mar" && r.i >= r.qs.length) r.qs = r.qs.concat(acPool(r.id));
+  acQuestion(); window.scrollTo(0, 0);
+}
+function acFinish() {
+  var r = AC.run, bonus = 0, upd = null; r.pct = null;
+  if (r.kind === "ch") { r.pct = Math.round(r.ok / r.qs.length * 100); if (r.pct >= 70) bonus += 30; if (r.pct === 100) bonus += 20; upd = { id: r.id, pct: r.pct }; }
+  var gain = r.pend + bonus; r.pend = 0; r.saving = true; AC.page = "end"; acEndView();
+  acSave(gain, upd).then(function (tot) { r.saving = false; r.tot = tot; r.after = acSnap(); if (AC.page === "end") acEndView(); })
+    .catch(function (e) { r.saving = false; r.err = fr(e); if (AC.page === "end") acEndView(); });
+}
+function acAbort() { var r = AC.run; AC.run = null; AC.page = "hub"; if (r && r.pend > 0 && prof) acSave(r.pend).catch(function () {}); }
+function acEndView() {
+  var r = AC.run, z = $("acbody"); if (!r || !z) return; var ch = r.kind === "ch", f = ch ? acFind(r.id) : null;
+  var h = '<div class="card acfin"><div class="big">' + (ch ? (r.pct === 100 ? "🏆" : r.pct >= 70 ? "🎉" : "💪") : "🏁") + "</div><h2>" + (ch ? r.ok + " / " + r.qs.length + " · " + r.pct + " %" : r.ok + " bonne" + (r.ok > 1 ? "s" : "") + " réponse" + (r.ok > 1 ? "s" : "")) + '</h2><p class="sub">' +
+    (ch ? (r.pct >= 70 ? "Chapitre réussi ! Le suivant est débloqué." : "Il faut 70 % pour débloquer la suite. Relis le cours et réessaie !") : "Bien joué, continue comme ça.") + "</p>";
+  if (r.saving) h += '<p class="sub">Enregistrement de tes points…</p>';
+  else if (r.err) h += '<p class="msg ko">Tes points n’ont pas pu être enregistrés : ' + E(r.err) + "</p>";
+  else {
+    h += '<div class="acst"><span>+' + r.tot + " XP</span></div>";
+    if (r.after.lvl > r.before.lvl) h += '<p style="margin:12px 0 0"><b>Niveau supérieur : ' + LVL[r.after.lvl][1] + " " + LVL[r.after.lvl][0] + " !</b></p>";
+    var nb = r.after.bd.filter(function (k) { return r.before.bd.indexOf(k) < 0; });
+    if (nb.length) h += '<p style="margin:8px 0 0">Nouveau badge : <b>' + acBadges(acSt()).filter(function (b) { return nb.indexOf(b.k) > -1; }).map(function (b) { return b.t; }).join(", ") + "</b></p>";
+  }
+  h += '<div class="ab" style="margin-top:16px"><button class="pr" data-a="again">↻ Rejouer</button><button data-a="home">Parcours</button></div>' + (f ? '<p style="margin:12px 0 0"><a href="' + E(f.c.fichier) + '" target="_blank" rel="noopener">📖 Revoir le cours</a></p>' : "") + "</div>";
+  z.innerHTML = h;
+}
+
+function acLoadBoard() {
+  return db.collection("progres").get().then(function (q) { var L = []; q.forEach(function (s) { var d = s.data(); d.id = s.id; L.push(d); }); AC.bl = false; AC.board = { list: L, at: Date.now() }; if (onAc() && AC.page === "board") acBoardView(); })
+    .catch(function (e) { AC.bl = false; AC.board = { list: [], err: fr(e), at: Date.now() }; if (onAc() && AC.page === "board") acBoardView(); });
+}
+function acBoardView() {
+  var z = $("acbody"); if (!z) return;
+  if ((!AC.board || Date.now() - AC.board.at > 90000) && !AC.bl) { AC.bl = true; acLoadBoard(); }
+  var B = AC.board, sem = lundi(), me = isAdmin ? "" : String(prof.id);
+  var h = (isAdmin ? "" : '<button class="qgo" data-a="home" style="margin-bottom:10px">← Mes parcours</button>') + '<div class="actab"><button data-a="tab" data-t="sem" class="' + (AC.tab === "sem" ? "on" : "") + '">Cette semaine</button><button data-a="tab" data-t="tot" class="' + (AC.tab === "tot" ? "on" : "") + '">Général</button></div>';
+  if (!B) h += '<p class="sub">Chargement…</p>';
+  else if (B.err) h += '<p class="msg ko">' + E(B.err) + "</p>";
+  else {
+    var L = B.list.map(function (d) { return { id: d.id, nom: d.nom, xp: AC.tab === "sem" ? (d.sem === sem ? d.xpSem || 0 : 0) : d.xp || 0, tot: d.xp || 0 }; }).filter(function (d) { return d.xp > 0; }).sort(function (a, b) { return b.xp - a.xp; });
+    var row = function (d, i) { var r = rowByNum(+d.id), p = r ? nm(r.n) : [d.nom, ""];
+      return '<div class="acbr' + (d.id === me ? " me" : "") + '"><span>' + (["🥇", "🥈", "🥉"][i] || "#" + (i + 1)) + "</span><span><b>" + E(p[0]) + "</b> " + E(p[1]) + "</span><span>" + LVL[lvl(d.tot)][1] + '</span><span class="xp">' + d.xp + " XP</span></div>"; };
+    h += L.length ? L.slice(0, 10).map(row).join("") : '<p class="sub">Personne n’a encore gagné de points. Sois le premier !</p>';
+    var mi = L.findIndex(function (d) { return d.id === me; }); if (mi >= 10) h += '<p class="sub" style="text-align:center;margin:6px 0">…</p>' + row(L[mi], mi);
+  }
+  z.innerHTML = h;
+}
+$("v-acad").addEventListener("click", function (e) {
+  var b = e.target.closest("button[data-a]"); if (!b || b.disabled) return; var a = b.dataset.a, r = AC.run;
+  if (a === "pick") acPick(+b.dataset.k);
+  else if (a === "next") acNext();
+  else if (a === "chap") acStart("ch", b.dataset.id);
+  else if (a === "mar") acStart("mar", b.dataset.id);
+  else if (a === "err") acStart("err", "err");
+  else if (a === "again") acStart(r.kind, r.id);
+  else if (a === "home") { AC.run = null; AC.page = "hub"; acDraw(); window.scrollTo(0, 0); }
+  else if (a === "board") { AC.page = "board"; acDraw(); }
+  else if (a === "tab") { AC.tab = b.dataset.t; acBoardView(); }
+  else if (a === "retry") { AC.st = 0; acLoad(); acDraw(); }
 });
 
 /* ---------- Statistiques de visite ---------- */
