@@ -91,7 +91,8 @@ css.textContent = "\
 .acq h3{margin:14px 0;font-size:19px;line-height:1.35;overflow-wrap:anywhere}.aco{display:grid;gap:10px}.aop{text-align:left;border:2px solid var(--line);background:var(--surface);color:var(--ink);border-radius:14px;padding:14px;font-size:16px;line-height:1.3;overflow-wrap:anywhere}.aop.good{border-color:#2fa36b;background:rgba(47,163,107,.14)}.aop.bad{border-color:#e5484d;background:rgba(229,72,77,.12)}.aop:disabled{opacity:1}\
 .acx{margin-top:14px;padding:12px 14px;border-radius:14px;border:1px solid var(--line);background:var(--surface);line-height:1.4;font-size:15px}.acx b{display:block;margin-bottom:4px}.acn{width:100%;margin-top:12px;border:0;border-radius:14px;padding:14px;font-weight:800;font-size:16px;background:var(--navy);color:var(--on-navy)}\
 .acp2{display:flex;justify-content:space-between;align-items:center;font-size:14px;font-weight:700;gap:10px}.acfin{text-align:center}.acfin .big{font-size:54px}.acfin h2{margin:6px 0}\
-.acbr{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;margin-bottom:8px;background:var(--surface)}.acbr.me{border-color:var(--blue)}.acbr b{overflow-wrap:anywhere}.acbr .xp{margin-left:auto;font-weight:800;white-space:nowrap}\
+.acbr{display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--line);border-radius:14px;margin-bottom:8px;background:var(--surface)}.acbr.me{border-color:var(--blue)}.acbr .av{width:42px;height:42px;margin:0;flex:none;font-size:15px}.acbr .tx{min-width:0}.acbr .chip{margin:0 0 0 6px;padding:1px 9px;font-size:12px}\
+.acdays{display:flex;gap:6px;margin:0 0 12px;overflow-x:auto;padding-bottom:2px}.acdays button{flex:1 0 auto;min-width:44px;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:12px;padding:7px 6px;font-weight:700;font-size:13px}.acdays button.on{background:var(--navy);color:var(--on-navy);border-color:var(--navy)}.acdays button:disabled{opacity:.4}.acdays small{display:block;font-weight:600;font-size:11px;opacity:.85}.acbr b{overflow-wrap:anywhere}.acbr .xp{margin-left:auto;font-weight:800;white-space:nowrap}\
 .actab{display:flex;gap:8px;margin:10px 0}.actab button{flex:1;border:1px solid var(--line);background:var(--surface);color:var(--ink);border-radius:99px;padding:9px;font-weight:700}.actab button.on{background:var(--navy);color:var(--on-navy);border-color:var(--navy)}\
 #cfban{display:flex;align-items:center;gap:14px;width:100%;text-align:left;margin:0 0 14px;padding:16px;border:0;border-radius:20px;background:linear-gradient(135deg,var(--navy),var(--blue));color:var(--on-navy);transition:transform .15s}#cfban[hidden]{display:none}#cfban:active{transform:scale(.98)}\
 #cfban i{font-style:normal;font-size:28px;width:52px;height:52px;display:grid;place-items:center;border-radius:16px;background:rgba(255,255,255,.18);flex:none}\
@@ -458,7 +459,7 @@ window.openProfil = function (n) {
   var mine = !isAdmin && !!prof && myKey() === n;
   var h = '<div class="pfv"><div class="av pfav">' + (pic ? '<img alt="Photo de ' + E(n) + '" src="' + E(pic) + '">' : av(n)) + "</div>" +
     "<h3><b>" + E(p[0]) + "</b> " + E(p[1]) + "</h3>" +
-    '<div class="pfm">' + nbHTML(r) + (me ? '<span class="chip">Admin</span>' : "") + (pr.relation && REL[pr.relation] ? '<span class="pfrel">' + REL[pr.relation] + "</span>" : "") + "</div>" +
+    '<div class="pfm">' + nbHTML(r) + (me ? '<span class="chip">Admin</span>' : "") + (isDel(r) ? '<span class="chip">Délégué</span>' : "") + (pr.relation && REL[pr.relation] ? '<span class="pfrel">' + REL[pr.relation] + "</span>" : "") + "</div>" +
     (pr.bio ? '<p class="pfbio">' + E(pr.bio) + "</p>" : me ? "" : '<p class="pfbio vide">' + (mine ? "Tu n’as pas encore écrit de bio." : "Pas encore de bio.") + "</p>") +
     (link ? '<a class="pffb" href="' + E(link) + '" target="_blank" rel="noopener">Accéder à ' + (me ? "mon" : "son") + " profil Facebook</a>" : "") +
     '</div><div class="ab">' + (mine ? '<button class="pr" data-a="ed">✏️ Modifier mon profil</button>' : "") + '<button data-a="x"' + (mine ? "" : ' style="grid-column:1/-1"') + ">Fermer</button></div>";
@@ -694,9 +695,10 @@ function acOn() { return typeof ACADEMIE !== "undefined" && ACADEMIE && ACADEMIE
 function lvl(xp) { var i = 0; while (i + 1 < LVL.length && xp >= LVL[i + 1][2]) i++; return i; }
 function dstr(d) { d = d || new Date(); return d.getFullYear() + "-" + ("0" + (d.getMonth() + 1)).slice(-2) + "-" + ("0" + d.getDate()).slice(-2); }
 function lundi() { var d = new Date(); d.setDate(d.getDate() - ((d.getDay() + 6) % 7)); return dstr(d); }
+function addj(t, n) { var p = t.split("-"); return dstr(new Date(+p[0], +p[1] - 1, +p[2] + n)); }
 function hier() { var d = new Date(); d.setDate(d.getDate() - 1); return dstr(d); }
 function shuf(a) { a = a.slice(); for (var i = a.length - 1; i > 0; i--) { var j = Math.floor(Math.random() * (i + 1)), t = a[i]; a[i] = a[j]; a[j] = t; } return a; }
-function acSt() { var d = AC.doc || {}; return { xp: d.xp || 0, serie: d.serie || 0, dernier: d.dernier || "", sem: d.sem || "", xpSem: d.xpSem || 0, ch: d.ch || {} }; }
+function acSt() { var d = AC.doc || {}; return { xp: d.xp || 0, serie: d.serie || 0, dernier: d.dernier || "", sem: d.sem || "", xpSem: d.xpSem || 0, ch: d.ch || {}, xj: d.xj || {} }; }
 function serieNow(s) { return s.dernier === dstr() || s.dernier === hier() ? s.serie : 0; }
 function acFind(cid) { var r = null; ACADEMIE.matieres.forEach(function (m) { m.chapitres.forEach(function (c, i) { if (c.id === cid) r = { m: m, c: c, i: i }; }); }); return r; }
 function acMake(c, i) { var x = c.qs[i], ix = shuf([0, 1, 2, 3]); return { id: c.id + "#" + i, q: x.q, o: ix.map(function (k) { return x.o[k]; }), a: ix.indexOf(x.a), e: x.e }; }
@@ -724,7 +726,8 @@ function acSave(gain, upd) {
   AC.chain = (AC.chain || Promise.resolve()).catch(function () {}).then(function () {
     var s = acSt(), t = dstr(), first = s.dernier !== t, serie = first ? (s.dernier === hier() ? s.serie : 0) + 1 : s.serie, tot = gain + (first ? 20 : 0), ch = Object.assign({}, s.ch);
     if (upd) ch[upd.id] = Math.max(ch[upd.id] || 0, upd.pct);
-    var n = { num: +prof.id, nom: prof.nom, xp: s.xp + tot, serie: serie, dernier: t, sem: lundi(), xpSem: (s.sem === lundi() ? s.xpSem : 0) + tot, ch: ch, maj: firebase.firestore.FieldValue.serverTimestamp() };
+    var xj = Object.assign({}, s.xj), lim = addj(t, -13); Object.keys(xj).forEach(function (k) { if (k < lim) delete xj[k]; }); xj[t] = (xj[t] || 0) + tot;   /* XP gagnés par jour (14 derniers jours) */
+    var n = { num: +prof.id, nom: prof.nom, xp: s.xp + tot, serie: serie, dernier: t, sem: lundi(), xpSem: (s.sem === lundi() ? s.xpSem : 0) + tot, ch: ch, xj: xj, maj: firebase.firestore.FieldValue.serverTimestamp() };
     return db.doc("progres/" + prof.id).set(n).then(function () { n.maj = null; AC.doc = n; acBanner(); return tot; });
   });
   return AC.chain;
@@ -821,18 +824,27 @@ function acLoadBoard() {
 function acBoardView() {
   var z = $("acbody"); if (!z) return;
   if ((!AC.board || Date.now() - AC.board.at > 90000) && !AC.bl) { AC.bl = true; acLoadBoard(); }
-  var B = AC.board, sem = lundi(), me = isAdmin ? "" : String(prof.id);
+  if (pubSt !== 2 && !AC.pld) { AC.pld = true; loadProfils().then(function () { if (onAc() && AC.page === "board") acBoardView(); }); }   /* photos de profil */
+  var B = AC.board, sem = lundi(), tod = dstr(), me = isAdmin ? "" : String(prof.id), day = AC.day || "tot", JN = ["Lun", "Mar", "Mer", "Jeu", "Ven", "Sam", "Dim"];
   var h = (isAdmin ? "" : '<button class="qgo" data-a="home" style="margin-bottom:10px">← Mes parcours</button>') + '<div class="actab"><button data-a="tab" data-t="sem" class="' + (AC.tab === "sem" ? "on" : "") + '">Cette semaine</button><button data-a="tab" data-t="tot" class="' + (AC.tab === "tot" ? "on" : "") + '">Général</button></div>';
+  if (AC.tab === "sem") {
+    h += '<div class="acdays"><button data-a="day" data-d="tot" class="' + (day === "tot" ? "on" : "") + '">Semaine</button>';
+    for (var j = 0; j < 7; j++) { var dj = addj(sem, j); h += '<button data-a="day" data-d="' + dj + '" class="' + (day === dj ? "on" : "") + '"' + (dj > tod ? " disabled" : "") + ">" + JN[j] + "<small>" + dj.slice(8) + "/" + dj.slice(5, 7) + "</small></button>"; }
+    h += "</div>";
+  }
   if (!B) h += '<p class="sub">Chargement…</p>';
   else if (B.err) h += '<p class="msg ko">' + E(B.err) + "</p>";
   else {
-    var L = B.list.map(function (d) { return { id: d.id, nom: d.nom, xp: AC.tab === "sem" ? (d.sem === sem ? d.xpSem || 0 : 0) : d.xp || 0, tot: d.xp || 0 }; }).filter(function (d) { return d.xp > 0; }).sort(function (a, b) { return b.xp - a.xp; });
-    var row = function (d, i) { var r = rowByNum(+d.id), p = r ? nm(r.n) : [d.nom, ""];
-      return '<div class="acbr' + (d.id === me ? " me" : "") + '"><span>' + (["🥇", "🥈", "🥉"][i] || "#" + (i + 1)) + "</span><span><b>" + E(p[0]) + "</b> " + E(p[1]) + "</span><span>" + LVL[lvl(d.tot)][1] + '</span><span class="xp">' + d.xp + " XP</span></div>"; };
-    h += L.length ? L.slice(0, 10).map(row).join("") : '<p class="sub">Personne n’a encore gagné de points. Sois le premier !</p>';
+    var xpOf = function (d) { return AC.tab !== "sem" ? d.xp || 0 : day === "tot" ? (d.sem === sem ? d.xpSem || 0 : 0) : ((d.xj || {})[day] || 0); };
+    var L = B.list.map(function (d) { return { id: d.id, nom: d.nom, xp: xpOf(d), tot: d.xp || 0 }; }).filter(function (d) { return d.xp > 0; }).sort(function (a, b) { return b.xp - a.xp; });
+    var row = function (d, i) {
+      var r = rowByNum(+d.id), p = r ? nm(r.n) : [d.nom, ""], pic = r ? (getPr(r.n) || {}).photo : "", nmx = r ? r.n : d.nom;
+      return '<div class="acbr' + (d.id === me ? " me" : "") + '"><span>' + (["🥇", "🥈", "🥉"][i] || "#" + (i + 1)) + '</span><div class="av">' + (pic ? '<img alt="Photo de ' + E(nmx) + '" data-n="' + E(nmx) + '" src="' + E(pic) + '">' : av(nmx)) + '</div><span class="tx"><b>' + E(p[0]) + "</b> " + E(p[1]) + (isDel(r) ? ' <span class="chip">Délégué</span>' : "") + "</span><span>" + LVL[lvl(d.tot)][1] + '</span><span class="xp">' + d.xp + " XP</span></div>"; };
+    h += L.length ? L.slice(0, 10).map(row).join("") : '<p class="sub">' + (AC.tab === "sem" && day !== "tot" ? "Personne n’a encore gagné de points ce jour-là." : "Personne n’a encore gagné de points. Sois le premier !") + "</p>";
     var mi = L.findIndex(function (d) { return d.id === me; }); if (mi >= 10) h += '<p class="sub" style="text-align:center;margin:6px 0">…</p>' + row(L[mi], mi);
   }
   z.innerHTML = h;
+  z.querySelectorAll(".acbr .av img").forEach(function (im) { im.onerror = function () { im.parentNode.innerHTML = av(im.getAttribute("data-n")); }; });
 }
 $("v-acad").addEventListener("click", function (e) {
   var b = e.target.closest("button[data-a]"); if (!b || b.disabled) return; var a = b.dataset.a, r = AC.run;
@@ -845,6 +857,7 @@ $("v-acad").addEventListener("click", function (e) {
   else if (a === "home") { AC.run = null; AC.page = "hub"; acDraw(); window.scrollTo(0, 0); }
   else if (a === "board") { AC.page = "board"; acDraw(); }
   else if (a === "tab") { AC.tab = b.dataset.t; acBoardView(); }
+  else if (a === "day") { AC.day = b.dataset.d; acBoardView(); }
   else if (a === "retry") { AC.st = 0; acLoad(); acDraw(); }
 });
 
