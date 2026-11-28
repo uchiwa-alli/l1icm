@@ -839,13 +839,14 @@ function acBoardView() {
     var L = B.list.map(function (d) { return { id: d.id, nom: d.nom, xp: xpOf(d), tot: d.xp || 0 }; }).filter(function (d) { return d.xp > 0; }).sort(function (a, b) { return b.xp - a.xp; });
     var row = function (d, i) {
       var r = rowByNum(+d.id), p = r ? nm(r.n) : [d.nom, ""], pic = r ? (getPr(r.n) || {}).photo : "", nmx = r ? r.n : d.nom;
-      return '<div class="acbr' + (d.id === me ? " me" : "") + '"><span>' + (["🥇", "🥈", "🥉"][i] || "#" + (i + 1)) + '</span><div class="av">' + (pic ? '<img alt="Photo de ' + E(nmx) + '" data-n="' + E(nmx) + '" src="' + E(pic) + '">' : av(nmx)) + '</div><span class="tx"><b>' + E(p[0]) + "</b> " + E(p[1]) + (isDel(r) ? ' <span class="chip">Délégué</span>' : "") + "</span><span>" + LVL[lvl(d.tot)][1] + '</span><span class="xp">' + d.xp + " XP</span></div>"; };
+      return '<div class="acbr' + (d.id === me ? " me" : "") + '" data-n="' + E(nmx) + '" tabindex="0" role="button"><span>' + (["🥇", "🥈", "🥉"][i] || "#" + (i + 1)) + '</span><div class="av">' + (pic ? '<img alt="Photo de ' + E(nmx) + '" data-n="' + E(nmx) + '" src="' + E(pic) + '">' : av(nmx)) + '</div><span class="tx"><b>' + E(p[0]) + "</b> " + E(p[1]) + (isDel(r) ? ' <span class="chip">Délégué</span>' : "") + "</span><span>" + LVL[lvl(d.tot)][1] + '</span><span class="xp">' + d.xp + " XP</span></div>"; };
     h += L.length ? L.slice(0, 10).map(row).join("") : '<p class="sub">' + (AC.tab === "sem" && day !== "tot" ? "Personne n’a encore gagné de points ce jour-là." : "Personne n’a encore gagné de points. Sois le premier !") + "</p>";
     var mi = L.findIndex(function (d) { return d.id === me; }); if (mi >= 10) h += '<p class="sub" style="text-align:center;margin:6px 0">…</p>' + row(L[mi], mi);
   }
   z.innerHTML = h;
   z.querySelectorAll(".acbr .av img").forEach(function (im) { im.onerror = function () { im.parentNode.innerHTML = av(im.getAttribute("data-n")); }; });
 }
+$("v-acad").addEventListener("click", function (e) { var r = e.target.closest(".acbr"); if (r && r.dataset.n && window.openProfil) window.openProfil(r.dataset.n); });
 $("v-acad").addEventListener("click", function (e) {
   var b = e.target.closest("button[data-a]"); if (!b || b.disabled) return; var a = b.dataset.a, r = AC.run;
   if (a === "pick") acPick(+b.dataset.k);

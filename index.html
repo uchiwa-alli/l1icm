@@ -204,11 +204,11 @@ body{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 .sec{display:flex;justify-content:space-between;align-items:baseline;margin:20px 2px 10px}
 .sec h3{margin:0;font-size:20px;letter-spacing:-.02em}
 .sec button{border:0;background:none;color:var(--blue);font-weight:700;font-size:14px;padding:0}
-.mc{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x proximity}
-.mc button{flex:none;width:152px;text-align:left;scroll-snap-align:start;border:1px solid var(--line);background:var(--surface);border-radius:18px;padding:12px;display:grid;gap:10px;align-content:start}
-.mc i{font-style:normal;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px}
-.mc b{font-size:15px;line-height:1.2;display:block}
-.mc span{font-size:12.5px;color:var(--muted);line-height:1.3;display:block;margin-top:2px}
+.mcs{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x proximity}
+.mcs button{flex:none;width:152px;text-align:left;scroll-snap-align:start;border:1px solid var(--line);background:var(--surface);border-radius:18px;padding:12px;display:grid;gap:10px;align-content:start}
+.mcs i{font-style:normal;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px}
+.mcs b{font-size:15px;line-height:1.2;display:block}
+.mcs span{font-size:12.5px;color:var(--muted);line-height:1.3;display:block;margin-top:2px}
 .tiles{grid-template-columns:1fr;gap:10px}
 @media(min-width:700px){.tiles{grid-template-columns:repeat(2,1fr)}}
 .tile{display:grid;grid-template-columns:52px 1fr 14px;grid-template-rows:auto auto;column-gap:14px;align-items:center;min-height:0;padding:12px 14px;border-radius:18px;gap:0 14px}
@@ -224,6 +224,29 @@ body{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
 #tabs button.on::after{content:"";position:absolute;bottom:0;width:26px;height:3px;border-radius:3px;background:var(--blue)}
 #q{border-radius:99px;padding:13px 20px;box-shadow:0 4px 14px rgba(22,24,72,.07)}
 .seg button{border-radius:16px}
+
+/* ===== Corrections : tailles + fiche profil ===== */
+.hhero{padding:16px 16px 14px;margin:10px 0 14px;border-radius:22px}
+.hhero h1{font-size:30px}.hhero p{font-size:14px;margin:0 0 10px}.hhero .lg{width:44px;height:44px;border-radius:12px}
+.hnext{padding:9px 12px}.hnext strong{font-size:16px}.hnext small{font-size:12.5px;line-height:1.35}
+.qa i{width:50px;height:50px;font-size:22px}.qa button{font-size:12px}
+.qa,.mcs,.acdays{scrollbar-width:none}.qa::-webkit-scrollbar,.mcs::-webkit-scrollbar,.acdays::-webkit-scrollbar{display:none}
+#app #cfban,#app #acban{padding:10px 14px;gap:12px;border-radius:18px;margin:0 0 10px}
+#app #cfban i,#app #acban i{width:40px;height:40px;font-size:21px;border-radius:12px}
+#app #cfban b,#app #acban b{font-size:16px}
+#app #cfban span,#app #acban span{overflow:hidden}
+#app #cfban small,#app #acban small{font-size:12.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.acbr{cursor:pointer}.acbr:active{opacity:.85}
+.acbr .tx{font-size:14px;line-height:1.25}.acbr .tx>b{display:block}
+.mc:has(.pfv){padding:0 0 calc(18px + env(safe-area-inset-bottom,0px));max-width:440px}
+.mc:has(.pfv)::before{content:"";display:block;height:96px;background:linear-gradient(135deg,#2b7be0,#4b3fd1 60%,#161848)}
+.mc:has(.pfv) .pfv{position:relative;padding:0 20px;margin-top:-58px}
+.mc:has(.pfv) .pfav{width:116px;height:116px;border:4px solid var(--bg);box-shadow:0 8px 22px rgba(22,24,72,.3);margin:0 auto 10px}
+.mc:has(.pfv) .pfv h3{font-size:22px;letter-spacing:-.02em}
+.mc:has(.pfv) .ab{padding:0 20px;margin-top:12px}
+.mc:has(.pfv) .ab button{border-radius:99px;padding:13px 8px}
+.mc:has(.pfv) .pffb{border-radius:99px;background:var(--blue);color:#fff}
+.mc:has(.pfv) .nb{display:inline-block}
 </style>
 </head>
 <body>
@@ -249,7 +272,7 @@ setTimeout(function(){var g=document.getElementById("gate");
 <div class="qa"><button data-h="quiz"><i>🧠</i>Quiz</button><button data-h="news"><i>📢</i>Annonces</button><button data-h="les"><i>📚</i>Cours</button><button data-h="edt"><i>🗓️</i>Planning</button><button data-h="cls"><i>👥</i>Classe</button></div>
 <div class="ban" id="ban" role="status" hidden></div>
 <button class="hero" id="qhero" hidden><i>🧠</i><div><span class="chip">🔥 À la une</span><b id="qh-t"></b><span id="qh-s"></span><em id="qh-go"></em></div></button>
-<div class="sec"><h3>Mes cours</h3><button data-h="edt">Voir tout ›</button></div><div class="mc" id="mc"></div>
+<div class="sec"><h3>Mes cours</h3><button data-h="edt">Voir tout ›</button></div><div class="mcs" id="mc"></div>
 <div class="sec"><h3>Tout l’essentiel</h3></div>
 <div class="tiles" id="tiles"></div>
 <p class="cp">© 2026 Alli · ALLI.DEV. Tous droits réservés.</p>
@@ -518,6 +541,6 @@ qHero();route();
 })();
 </script>
 <script src="academie.js?v=2"></script> <script src="firebase-config.js"></script>
-<script src="comptes.js?v=2"></script>
+<script src="comptes.js?v=3"></script>
 </body>
 </html>
