@@ -217,7 +217,6 @@ setTimeout(function(){var g=document.getElementById("gate");
 <div class="lessons" id="lessons"></div></section>
 
 <section class="view" id="v-cls"><h2>La classe</h2><p class="sub">Retrouve ton numéro, ton groupe et tes camarades. Tape un nom ou un numéro.<br><small>Les noms en double sur la liste officielle sont regroupés (ex. N° 58 · 59).</small></p>
-<div class="card fbox" id="formbox" hidden><div><b>Ta fiche n’est pas à jour ?</b><span class="sub" style="display:block;margin:2px 0 0;font-size:13px">Envoie ton nom exact et ton lien Facebook. L’admin valide.</span></div><a class="qgo sm" id="formbtn" target="_blank" rel="noopener">✏️ Modifier ma fiche</a></div>
 <div class="seg" id="seg"><button class="on" data-g="0">Tous<small id="sg0"></small></button><button data-g="1">Groupe 1<small id="sg1"></small></button><button data-g="2">Groupe 2<small id="sg2"></small></button></div>
 <input id="q" type="search" placeholder="Rechercher un nom ou un numéro" aria-label="Rechercher un nom ou un numéro"><p class="sub" style="margin:8px 2px"><b id="cnt"></b></p><div class="rows" id="people"></div><button class="qgo alt" id="more" hidden style="width:100%"></button>
 </section>
@@ -449,7 +448,6 @@ function okFb(u){try{var x=new URL(u),h=x.hostname.toLowerCase();return x.protoc
 function okPh(u){return /^https:\/\//i.test(u)||/^photos\/[\w.\-]+$/i.test(u)}
 function nkey(t){return nz(String(t||"")).replace(/\s+/g," ").trim()}
 function loadFiches(){var F=I.fiches;if(!F||!window.fetch)return;
- if(F.formulaire&&/^https:\/\//.test(F.formulaire)){$("formbtn").href=F.formulaire;$("formbox").hidden=false}
  if(!F.csv)return;
  fetch(F.csv,{cache:"no-store"}).then(function(r){if(!r.ok)throw 0;return r.text()}).then(function(t){
   var idx={},m={};P.forEach(function(n){idx[nkey(n)]=n});

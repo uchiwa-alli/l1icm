@@ -150,6 +150,7 @@ window.go = function (v) {
   if (v !== "acad" && AC && AC.run && AC.page === "run") acAbort();
   _go(v);
   if (v === "cls") loadProfils();
+  if (v === "conf") { viewConf(); try { localStorage.setItem("l1icm_cf_vu", "1"); } catch (e) {} tConf.querySelector("em").hidden = true; }
   if (v === "acad") viewAcad();
   if (v === "sondages") viewSond();
   if (v === "compte") viewCompte();
