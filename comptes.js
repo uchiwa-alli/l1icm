@@ -154,6 +154,7 @@ window.go = function (v) {
   if (v === "conf") { viewConf(); try { localStorage.setItem("l1icm_cf_vu", "1"); } catch (e) {} tConf.querySelector("em").hidden = true; }
   if (v === "acad") viewAcad();
   if (v === "sondages") viewSond();
+  if (v === "news") viewNews();
   if (v === "compte") viewCompte();
   if (v === "admin") loadAdmin();
 };
@@ -996,4 +997,41 @@ function manage(id) {
   }
   home();
 }
+
+/* ---------- Annonces publiées par les délégués (Firestore : annonces/<id>) ---------- */
+var NW = { list: [] };
+function canPost() { if (ST !== "in") return false; if (isAdmin) return true; var r = prof && rowByNum(+prof.id); return typeof isDel === "function" && isDel(r); }
+function nwCard(a) {
+  var t = ms(a.creeLe), c = t ? new Date(t).toLocaleDateString("fr-FR", { day: "numeric", month: "long" }) : "À l’instant";
+  if (a.jour) {
+    var q = String(a.jour).split("-"), d0 = new Date(), n = Math.round((new Date(+q[0], q[1] - 1, +q[2]) - new Date(d0.getFullYear(), d0.getMonth(), d0.getDate())) / 864e5);
+    if (n > 0) c += " · dans " + n + " jour" + (n > 1 ? "s" : ""); else if (n === 0) c += " · Aujourd’hui";
+  }
+  var mine = isAdmin || (prof && String(a.num) === String(prof.id));
+  return '<div class="card" data-id="' + E(a.id) + '"><span class="chip">' + E(c) + '</span><span class="chip">Délégué</span><b style="display:block">' + E(a.titre) + '</b><span style="display:block;white-space:pre-wrap;overflow-wrap:anywhere">' + E(a.texte) + '</span>' +
+    (a.auteur ? "<small>— " + E(a.auteur) + "</small>" : "") + (mine ? '<button class="nwdel" type="button" data-a="nwd">Supprimer</button>' : "") + "</div>";
+}
+function drawNews() { var z = $("nwl"); if (z) z.innerHTML = NW.list.map(nwCard).join(""); }
+function viewNews() {
+  var v = $("v-news"), nl = $("newslist"); if (!v || !nl) return;
+  var top = $("newsdyn"); if (!top) { top = document.createElement("div"); top.id = "newsdyn"; v.insertBefore(top, nl); }
+  top.innerHTML = (canPost() ? '<button class="qgo" id="nwo" type="button">✍️ Publier une annonce</button><div class="card" id="nwf" hidden><form class="fm" id="nwform"><label>Titre<input type="text" name="titre" maxlength="80" required></label><label>Message<textarea name="texte" rows="4" maxlength="600" required></textarea></label><label>Date concernée (facultatif)<input type="date" name="jour"></label><button class="qgo" type="submit">Publier</button><p class="msg"></p></form></div>' : "") + '<div class="news" id="nwl"></div>';
+  drawNews();
+  if (!db || ST !== "in") return;
+  db.collection("annonces").orderBy("creeLe", "desc").limit(30).get().then(function (q) {
+    NW.list = q.docs.map(function (d) { var o = d.data(); o.id = d.id; return o; }); drawNews();
+  }).catch(noop);
+}
+$("v-news").addEventListener("click", function (e) {
+  var o = e.target.closest("#nwo"); if (o) { var f = $("nwf"); f.hidden = !f.hidden; if (!f.hidden) f.querySelector("input").focus(); return; }
+  var b = e.target.closest('[data-a="nwd"]'); if (!b) return; var card = b.closest("[data-id]"); if (!card || !confirm("Supprimer cette annonce ?")) return;
+  b.disabled = true; db.doc("annonces/" + card.dataset.id).delete().then(viewNews).catch(function (er) { alert(fr(er)); b.disabled = false; });
+});
+$("v-news").addEventListener("submit", function (e) {
+  if (e.target.id !== "nwform") return; e.preventDefault(); if (!canPost() || !db) return;
+  var f = e.target, t = f.elements.titre.value.trim(), x = f.elements.texte.value.trim(), btn = f.querySelector("button"), m = f.querySelector(".msg");
+  if (!t || !x) return; btn.disabled = true; m.className = "msg"; m.textContent = "Publication…";
+  db.collection("annonces").add({ titre: t, texte: x, jour: f.elements.jour.value || "", num: isAdmin ? 0 : +prof.id, auteur: isAdmin ? "Admin" : (prof.nom || "Délégué"), creeLe: firebase.firestore.FieldValue.serverTimestamp() })
+    .then(viewNews).catch(function (er) { m.className = "msg ko"; m.textContent = fr(er); btn.disabled = false; });
+});
 })();
