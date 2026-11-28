@@ -178,6 +178,52 @@ a.qgo{display:inline-block;text-decoration:none}
 html.locked #intro,html.locked #app{display:none!important}
 #gate,#blk{position:fixed;inset:0;z-index:2000;background:var(--bg);overflow:auto;padding:24px 18px calc(24px + env(safe-area-inset-bottom,0px))}
 .gi2{max-width:460px;margin:0 auto}
+
+/* ===== Refonte « application mobile » ===== */
+:root{--hdr:#161848}
+@media(prefers-color-scheme:dark){:root:not([data-theme="light"]){--hdr:#10133a}}
+:root[data-theme="dark"]{--hdr:#10133a}
+body{padding-bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+.bar{background:var(--hdr);color:#fff;padding:12px 0;gap:10px;clip-path:inset(0 -100vmax);box-shadow:0 0 0 100vmax var(--hdr)}
+.bar b{color:#fff}
+.bar #back,.bar #th,.bar #acc{background:rgba(255,255,255,.14);border-color:transparent;color:#fff}
+.hhero{position:relative;overflow:hidden;border-radius:26px;padding:22px 20px 20px;margin:14px 0 18px;color:#fff;background:linear-gradient(150deg,#1f2590,#161848 55%,#0f1236)}
+.hhero::before{content:"";position:absolute;width:260px;height:260px;border-radius:50%;right:-90px;top:-120px;background:#2b7be0;opacity:.5}
+.hhero::after{content:"";position:absolute;width:150px;height:150px;border-radius:50%;right:40px;bottom:-90px;background:#8ac4f4;opacity:.3}
+.hhero>*{position:relative;z-index:1}
+.htop{display:flex;justify-content:space-between;align-items:flex-start;gap:12px}
+.hhero .lg{width:54px;height:54px;border-radius:15px;object-fit:cover;flex:none}
+.hhero small{color:#8ac4f4;font-weight:600}
+.hhero h1{margin:2px 0 4px;font-size:clamp(34px,9vw,44px);letter-spacing:-.04em;line-height:1}
+.hhero p{margin:0 0 16px;color:#cfe3fb}
+.hnext{background:rgba(255,255,255,.12);border-radius:16px;padding:12px 14px}
+.hnext strong{display:block;font-size:19px;line-height:1.25;letter-spacing:-.01em}
+.qa{display:flex;justify-content:space-between;gap:6px;margin:0 0 6px;overflow-x:auto;padding:4px 2px 8px}
+.qa button{flex:1;min-width:60px;background:none;border:0;display:flex;flex-direction:column;align-items:center;gap:7px;font-size:12.5px;font-weight:600;color:var(--ink);padding:0}
+.qa i{font-style:normal;width:56px;height:56px;border-radius:50%;display:grid;place-items:center;font-size:25px;background:var(--surface);border:2.5px solid var(--blue);box-shadow:0 5px 14px rgba(43,123,224,.2)}
+.sec{display:flex;justify-content:space-between;align-items:baseline;margin:20px 2px 10px}
+.sec h3{margin:0;font-size:20px;letter-spacing:-.02em}
+.sec button{border:0;background:none;color:var(--blue);font-weight:700;font-size:14px;padding:0}
+.mc{display:flex;gap:10px;overflow-x:auto;padding:2px 2px 8px;scroll-snap-type:x proximity}
+.mc button{flex:none;width:152px;text-align:left;scroll-snap-align:start;border:1px solid var(--line);background:var(--surface);border-radius:18px;padding:12px;display:grid;gap:10px;align-content:start}
+.mc i{font-style:normal;width:46px;height:46px;border-radius:14px;display:grid;place-items:center;color:#fff;font-weight:800;font-size:15px}
+.mc b{font-size:15px;line-height:1.2;display:block}
+.mc span{font-size:12.5px;color:var(--muted);line-height:1.3;display:block;margin-top:2px}
+.tiles{grid-template-columns:1fr;gap:10px}
+@media(min-width:700px){.tiles{grid-template-columns:repeat(2,1fr)}}
+.tile{display:grid;grid-template-columns:52px 1fr 14px;grid-template-rows:auto auto;column-gap:14px;align-items:center;min-height:0;padding:12px 14px;border-radius:18px;gap:0 14px}
+.tile i{grid-row:1/3;width:52px;height:52px;margin:0;border-radius:16px}
+.tile b{align-self:end;font-size:17px}
+.tile span{align-self:start}
+.tile::after{content:"›";grid-row:1/3;grid-column:3;color:var(--muted);font-size:24px;line-height:1}
+.tile:hover{transform:none}
+#tabs{position:fixed;left:0;right:0;bottom:0;z-index:6;background:var(--surface);border-top:1px solid var(--line);display:flex;justify-content:space-around;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));box-shadow:0 -6px 20px rgba(22,24,72,.08)}
+#tabs button{flex:1;max-width:96px;border:0;background:none;display:flex;flex-direction:column;align-items:center;gap:3px;font-size:11.5px;font-weight:600;color:var(--muted);padding:6px 0 8px;position:relative}
+#tabs svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+#tabs button.on{color:var(--blue)}
+#tabs button.on::after{content:"";position:absolute;bottom:0;width:26px;height:3px;border-radius:3px;background:var(--blue)}
+#q{border-radius:99px;padding:13px 20px;box-shadow:0 4px 14px rgba(22,24,72,.07)}
+.seg button{border-radius:16px}
 </style>
 </head>
 <body>
@@ -196,11 +242,15 @@ setTimeout(function(){var g=document.getElementById("gate");
 
 <div id="app" hidden>
 <header class="bar"><button id="back" hidden>← Accueil</button><img class="lg" alt=""><b id="ttl">L1 ICM</b><button id="th" aria-label="Changer de thème">◐</button></header>
+<nav id="tabs" aria-label="Navigation principale"><button data-h="home"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 11l9-8 9 8"/><path d="M5 10v10h5v-6h4v6h5V10"/></svg>Accueil</button><button data-h="acad"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 9l10-5 10 5-10 5z"/><path d="M6 11v5c3 2.5 9 2.5 12 0v-5"/></svg>Académie</button><button data-h="edt"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="3"/><path d="M8 3v4M16 3v4M3 10h18"/></svg>Planning</button><button data-h="cls"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="9" cy="8" r="3.5"/><path d="M2.5 20c0-3.6 2.9-6 6.5-6s6.5 2.4 6.5 6"/><circle cx="17.5" cy="9" r="2.5"/><path d="M17 14c2.8 0 4.5 1.8 4.5 4.5"/></svg>Classe</button><button data-h="compte"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="8" r="4"/><path d="M4 21c0-4.4 3.6-7 8-7s8 2.6 8 7"/></svg>Profil</button></nav>
 
 <section class="view on" id="v-home">
+<div class="hhero"><div class="htop"><div><small id="gr">Bonjour</small><h1>L1 ICM</h1></div><img class="lg" alt="Logo L1 ICM"></div><p>Apprendre, échanger, réussir ensemble.</p><div class="hnext"><strong id="nx">…</strong><small id="nx2"></small></div></div>
+<div class="qa"><button data-h="quiz"><i>🧠</i>Quiz</button><button data-h="news"><i>📢</i>Annonces</button><button data-h="les"><i>📚</i>Cours</button><button data-h="edt"><i>🗓️</i>Planning</button><button data-h="cls"><i>👥</i>Classe</button></div>
 <div class="ban" id="ban" role="status" hidden></div>
 <button class="hero" id="qhero" hidden><i>🧠</i><div><span class="chip">🔥 À la une</span><b id="qh-t"></b><span id="qh-s"></span><em id="qh-go"></em></div></button>
-<div class="card live"><div><small id="gr">Bonjour</small><strong id="nx">…</strong><small id="nx2"></small></div><img class="lg" alt="Logo L1 ICM"></div>
+<div class="sec"><h3>Mes cours</h3><button data-h="edt">Voir tout ›</button></div><div class="mc" id="mc"></div>
+<div class="sec"><h3>Tout l’essentiel</h3></div>
 <div class="tiles" id="tiles"></div>
 <p class="cp">© 2026 Alli · ALLI.DEV. Tous droits réservés.</p>
 </section>
@@ -456,6 +506,16 @@ function loadFiches(){var F=I.fiches;if(!F||!window.fetch)return;
   FICHES=m;pp()}).catch(function(){})}
 loadFiches();
 qHero();route();
+</script>
+<script>
+(function(){
+ $("mc").innerHTML=names.map(function(n,i){var w=n.split(" "),ini=(w.length>1?w[0].charAt(0)+w[1].charAt(0):n.slice(0,3)).toUpperCase();
+  return '<button data-h="les"><i class="c'+i+'">'+esc(ini)+'</i><div><b>'+esc(n)+'</b><span>'+esc(teach[n]||"")+'</span></div></button>'}).join("");
+ document.querySelectorAll("[data-h]").forEach(function(b){b.onclick=function(){location.hash=b.dataset.h}});
+ var tb=document.querySelectorAll("#tabs button");
+ function mark(){var v=location.hash.slice(1)||"home";tb.forEach(function(b){b.classList.toggle("on",b.dataset.h===v)})}
+ window.addEventListener("hashchange",mark);mark();
+})();
 </script>
 <script src="academie.js?v=2"></script> <script src="firebase-config.js"></script>
 <script src="comptes.js?v=2"></script>
